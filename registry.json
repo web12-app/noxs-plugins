@@ -22,7 +22,16 @@
         "starter",
         "demo"
       ],
-      "minimumNoxsVersion": "0.11.0"
+      "homepage": "https://github.com/web12-app/noxs-plugins",
+      "repository": "https://github.com/web12-app/noxs-plugins",
+      "commands": [
+        "hello"
+      ],
+      "minimumNoxsVersion": "0.11.0",
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/hello-v1.0.0/",
+      "checksum": "fb5bd2950462239a727ebf8e4d8c2ffeb1a44cceb606e04c5dffb5f42744b021",
+      "updatedAt": "2026-10-07T16:49:39.753Z",
+      "releaseTag": "hello-v1.0.0"
     }
   ]
 }
