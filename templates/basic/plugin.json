@@ -1,0 +1,17 @@
+{
+  "id": "my-plugin",
+  "name": "My Plugin",
+  "version": "0.1.0",
+  "description": "Describe what your Noxs plugin does",
+  "logo": "icon.svg",
+  "readme": "README.md",
+  "main": "plugin.js",
+  "permissions": [
+    "ui"
+  ],
+  "commands": [],
+  "minimumNoxsVersion": "0.11.0",
+  "author": "Your Name",
+  "license": "MIT",
+  "category": "Utilities"
+}

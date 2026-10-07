@@ -1,0 +1,11 @@
+{
+  "name": "noxs-plugin-hello",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Example Noxs plugin",
+  "type": "module",
+  "scripts": {
+    "build": "node ../../scripts/build-plugin.mjs .",
+    "validate": "node ../../scripts/validate-plugin.mjs ."
+  }
+}

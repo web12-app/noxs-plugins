@@ -1,0 +1,6 @@
+node_modules/
+dist/
+*.noxs-plugin
+*.noxs-plugin.sha256
+__pycache__/
+.DS_Store

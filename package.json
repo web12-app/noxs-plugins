@@ -1,0 +1,16 @@
+{
+  "name": "noxs-plugins",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Official Noxs Plugin Store registry, example plugins and release tooling",
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate-plugin.mjs",
+    "build": "node scripts/build-plugin.mjs",
+    "build:all": "node scripts/build-plugin.mjs --all",
+    "registry": "node scripts/update-registry.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.2"
+  }
+}

@@ -1,0 +1,134 @@
+# Noxs Plugin release workflow.
+#
+# Trigger: a tag shaped <plugin-id>-v<version> (example: hello-v1.0.0).
+# Pipeline: validate -> build -> package -> GitHub Release -> update registry.
+# The workflow fails immediately on invalid plugin JSON, missing logo,
+# missing README, missing entry point, invalid version or build failure —
+# a broken plugin can never reach the Plugin Store registry.
+name: release-plugin
+
+on:
+  push:
+    tags:
+      - '*-v*'
+  workflow_dispatch:
+    inputs:
+      plugin:
+        description: 'Plugin directory name (example: hello)'
+        required: true
+      version:
+        description: 'Version to release (example: 1.0.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve plugin + version
+        id: resolve
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PLUGIN="${{ github.event.inputs.plugin }}"
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+            PLUGIN="${TAG%%-v*}"
+            VERSION="${TAG#*-v}"
+          fi
+          case "$PLUGIN" in
+            *[!a-z0-9-]*|"") echo "Invalid plugin id: $PLUGIN" >&2; exit 1 ;;
+          esac
+          if ! printf '%s' "$VERSION" | grep -qE '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'; then
+            echo "Invalid version: $VERSION" >&2; exit 1
+          fi
+          if [ ! -f "plugins/$PLUGIN/plugin.json" ]; then
+            echo "Unknown plugin: $PLUGIN" >&2; exit 1
+          fi
+          echo "plugin=$PLUGIN" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$PLUGIN-v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install tooling
+        run: npm install
+
+      - name: Validate all plugins
+        run: npm run validate
+
+      - name: Build plugin
+        run: node scripts/build-plugin.mjs "plugins/${{ steps.resolve.outputs.plugin }}"
+
+      - name: Package .noxs-plugin artifact
+        id: package
+        run: |
+          set -euo pipefail
+          PLUGIN="${{ steps.resolve.outputs.plugin }}"
+          VERSION="${{ steps.resolve.outputs.version }}"
+          NAME="$PLUGIN-$VERSION.noxs-plugin"
+          cd "plugins/$PLUGIN/dist"
+          # A .noxs-plugin is a plain gzipped tar of the release files.
+          tar -czf "../../../$NAME" plugin.js plugin.json README.md icon.svg
+          cd -
+          sha256sum "$NAME" | awk '{print $1}' > "$NAME.sha256"
+          echo "artifact=$NAME" >> "$GITHUB_OUTPUT"
+          echo "checksum=$(cat "$NAME.sha256")" >> "$GITHUB_OUTPUT"
+
+      - name: Update registry
+        run: |
+          node scripts/update-registry.mjs \
+            --plugin "plugins/${{ steps.resolve.outputs.plugin }}" \
+            --artifact "https://github.com/web12-app/noxs-plugins/releases/download/${{ steps.resolve.outputs.tag }}/${{ steps.resolve.outputs.artifact }}" \
+            --checksum "${{ steps.package.outputs.checksum }}" \
+            --tag "${{ steps.resolve.outputs.tag }}"
+
+      - name: Commit registry
+        run: |
+          set -euo pipefail
+          git config user.name "noxs-release-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add registry.json
+          if git diff --cached --quiet; then
+            echo "Registry already up to date"
+          else
+            git commit -m "registry: ${{ steps.resolve.outputs.plugin }} v${{ steps.resolve.outputs.version }}"
+            git push origin HEAD:${GITHUB_REF_NAME} || git push origin HEAD:main
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          PLUGIN="${{ steps.resolve.outputs.plugin }}"
+          VERSION="${{ steps.resolve.outputs.version }}"
+          NAME="${{ steps.resolve.outputs.artifact }}"
+          gh release create "${{ steps.resolve.outputs.tag }}" \
+            --title "$PLUGIN v$VERSION" \
+            --notes "Noxs plugin release: **$PLUGIN** v$VERSION.
+
+          Assets: \`$NAME\` (\`$NAME.sha256\`), plugin.js, plugin.json, README.md, icon.svg.
+
+          Install from the Noxs Plugin Store (\`nx plug install $PLUGIN\`)." \
+            "$NAME" "$NAME.sha256" \
+            "plugins/$PLUGIN/dist/plugin.js" \
+            "plugins/$PLUGIN/dist/plugin.json" \
+            "plugins/$PLUGIN/dist/README.md" \
+            "plugins/$PLUGIN/dist/icon.svg"
+
+      - name: Release summary
+        run: |
+          echo "Released ${{ steps.resolve.outputs.plugin }} v${{ steps.resolve.outputs.version }}"
+          echo "Artifact: ${{ steps.resolve.outputs.artifact }} (sha256 ${{ steps.package.outputs.checksum }})"

@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "plugins": [
+    {
+      "id": "hello",
+      "name": "Hello",
+      "version": "1.0.0",
+      "description": "Example Noxs plugin",
+      "logo": "icon.svg",
+      "readme": "README.md",
+      "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/hello/icon.svg",
+      "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/hello/README.md",
+      "release": "1.0.0",
+      "permissions": [
+        "ui"
+      ],
+      "category": "Utilities",
+      "author": "CrossberryWeb",
+      "license": "MIT",
+      "keywords": [
+        "example",
+        "starter",
+        "demo"
+      ],
+      "minimumNoxsVersion": "0.11.0"
+    }
+  ]
+}
