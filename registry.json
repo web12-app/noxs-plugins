@@ -28,9 +28,9 @@
         "hello"
       ],
       "minimumNoxsVersion": "0.11.0",
-      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/hello-v1.0.0/",
-      "checksum": "fb5bd2950462239a727ebf8e4d8c2ffeb1a44cceb606e04c5dffb5f42744b021",
-      "updatedAt": "2026-10-07T16:49:39.753Z",
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/hello-v1.0.0/hello-1.0.0.noxs-plugin",
+      "checksum": "06489e5b06aec433deb144e070afd8f57b7822b00b8cafd27cf6f10f5e1113cf",
+      "updatedAt": "2026-10-07T17:02:51.263Z",
       "releaseTag": "hello-v1.0.0"
     }
   ]
