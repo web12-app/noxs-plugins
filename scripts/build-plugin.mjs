@@ -9,7 +9,8 @@
  *   3.  copy plugin.json -> dist/plugin.json
  *   4.  copy README      -> dist/README.md
  *   5.  copy logo        -> dist/icon.svg (original name preserved)
- *   6.  verify all four outputs exist
+ *   5b. copy bin/ guest command scripts -> dist/bin/ (when present)
+ *   6.  verify all outputs exist
  *
  * Usage:
  *   node scripts/build-plugin.mjs <plugin-dir>     # build one plugin
@@ -87,6 +88,17 @@ export async function buildPlugin(pluginDir) {
     fs.copyFileSync(ctx.readme, path.join(dist, path.basename(ctx.readme)));
     if (ctx.logo) fs.copyFileSync(ctx.logo, path.join(dist, path.basename(ctx.logo)));
 
+    // Step 5b — guest command scripts (bin/) ship inside the artifact so the
+    // Noxs Plugin Manager can install them as terminal commands.
+    let binCopied = 0;
+    if (ctx.bin) {
+        fs.mkdirSync(path.join(dist, 'bin'), { recursive: true });
+        for (const file of ctx.binFiles) {
+            fs.copyFileSync(file, path.join(dist, 'bin', path.basename(file)));
+            binCopied += 1;
+        }
+    }
+
     // Step 6 — verify the release artifact set.
     const required = ['plugin.js', 'plugin.json', path.basename(ctx.readme)];
     if (ctx.logo) required.push(path.basename(ctx.logo));
@@ -98,7 +110,8 @@ export async function buildPlugin(pluginDir) {
     }
 
     const kb = (fs.statSync(path.join(dist, 'plugin.js')).size / 1024).toFixed(1);
-    console.log(`built     ${ctx.meta.id} v${ctx.meta.version} -> dist/plugin.js (${kb} KB)`);
+    const binNote = binCopied > 0 ? `, ${binCopied} command script(s)` : '';
+    console.log(`built     ${ctx.meta.id} v${ctx.meta.version} -> dist/plugin.js (${kb} KB${binNote})`);
     return dist;
 }
 

@@ -79,8 +79,18 @@ jobs:
           VERSION="${{ steps.resolve.outputs.version }}"
           NAME="$PLUGIN-$VERSION.noxs-plugin"
           cd "plugins/$PLUGIN/dist"
-          # A .noxs-plugin is a plain gzipped tar of the release files.
-          tar -czf "../../../$NAME" plugin.js plugin.json README.md icon.svg
+          # A .noxs-plugin is a plain gzipped tar of the release files
+          # (plugin.js, plugin.json, README.md, icon.svg and the optional
+          # bin/ guest command scripts).
+          ARGS=(plugin.js plugin.json README.md icon.svg)
+          if [ -d bin ]; then
+            for f in bin/*; do
+              if [ -f "$f" ]; then
+                ARGS+=("$f")
+              fi
+            done
+          fi
+          tar -czf "../../../$NAME" "${ARGS[@]}"
           cd -
           sha256sum "$NAME" | awk '{print $1}' > "$NAME.sha256"
           echo "artifact=$NAME" >> "$GITHUB_OUTPUT"
@@ -127,14 +137,17 @@ jobs:
             printf 'Assets: `%s` (`%s.sha256`), plugin.js, plugin.json, README.md, icon.svg.\n\n' "$NAME" "$NAME"
             printf 'Install from the Noxs Plugin Store (`nx plug install %s`).\n' "$PLUGIN"
           } > release-notes.md
+          ASSETS=("$NAME" "$NAME.sha256" "plugins/$PLUGIN/dist/plugin.js" "plugins/$PLUGIN/dist/plugin.json" "plugins/$PLUGIN/dist/README.md" "plugins/$PLUGIN/dist/icon.svg")
+          if [ -d "plugins/$PLUGIN/dist/bin" ]; then
+            printf '\nGuest commands: %s.\n' "$(ls "plugins/$PLUGIN/dist/bin" | tr '\n' ' ')" >> release-notes.md
+            for f in "plugins/$PLUGIN/dist/bin"/*; do
+              ASSETS+=("$f")
+            done
+          fi
           gh release create "${{ steps.resolve.outputs.tag }}" \
             --title "$PLUGIN v$VERSION" \
             --notes-file release-notes.md \
-            "$NAME" "$NAME.sha256" \
-            "plugins/$PLUGIN/dist/plugin.js" \
-            "plugins/$PLUGIN/dist/plugin.json" \
-            "plugins/$PLUGIN/dist/README.md" \
-            "plugins/$PLUGIN/dist/icon.svg"
+            "${ASSETS[@]}"
 
       - name: Release summary
         run: |

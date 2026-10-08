@@ -16,6 +16,7 @@
  *   11. Resolve README path (default: README.md)
  *   12. Verify README exists
  *   13. Validate commands
+ *   14. Validate bin/ guest command scripts (names, size, shebang)
  *
  * The build must never silently ignore invalid metadata — every problem
  * exits non-zero with a clear `plugin.json field` style message.
@@ -36,6 +37,8 @@ const REQUIRED_PERMISSIONS = [
 ];
 const LOGO_EXTENSIONS = ['.svg', '.png', '.webp', '.jpg', '.jpeg'];
 const REQUIRED_FIELDS = ['id', 'name', 'version', 'description', 'main', 'permissions', 'minimumNoxsVersion'];
+/** Guest command scripts (bin/) must stay small enough to ship as shims. */
+export const MAX_BIN_BYTES = 128 * 1024;
 
 export class PluginValidationError extends Error {
     constructor(field, message) {
@@ -168,6 +171,37 @@ export function validatePlugin(pluginDir) {
         }
     }
 
+    // 14. bin/ (optional directory of guest command scripts). Every entry
+    // becomes a terminal command installed into the guest /usr/local/bin by
+    // the Noxs Plugin Manager — but ONLY for plugins granted the terminal
+    // permission. The build must never ship a broken or hostile script.
+    const binDir = path.join(pluginDir, 'bin');
+    const binFiles = [];
+    if (fs.existsSync(binDir)) {
+        if (!fs.statSync(binDir).isDirectory()) fail('bin', 'must be a directory of command scripts');
+        for (const name of fs.readdirSync(binDir).sort()) {
+            if (!PLUGIN_ID_RE.test(name)) {
+                fail('bin', `invalid command name "${name}" (expected lowercase letters, digits, dashes)`);
+            }
+            const file = path.join(binDir, name);
+            if (!fs.statSync(file).isFile()) fail('bin', `"${name}" must be a regular file`);
+            const size = fs.statSync(file).size;
+            if (size === 0) fail('bin', `"${name}" is empty`);
+            if (size > MAX_BIN_BYTES) fail('bin', `"${name}" is larger than ${MAX_BIN_BYTES} bytes`);
+            const head = Buffer.alloc(2);
+            const fd = fs.openSync(file, 'r');
+            try {
+                fs.readSync(fd, head, 0, 2, 0);
+            } finally {
+                fs.closeSync(fd);
+            }
+            if (head.toString('ascii') !== '#!') {
+                fail('bin', `"${name}" must start with a "#!" shebang (it runs as a guest command)`);
+            }
+            binFiles.push(file);
+        }
+    }
+
     // Optional free-form fields must at least be the right type.
     for (const field of ['author', 'license', 'category', 'homepage', 'repository']) {
         if (meta[field] !== undefined && typeof meta[field] !== 'string') {
@@ -190,6 +224,8 @@ export function validatePlugin(pluginDir) {
         entry: entryFile,
         logo: logoFile,
         readme: readmeFile,
+        bin: binFiles.length > 0 ? binDir : null,
+        binFiles,
         dist: path.join(pluginDir, 'dist')
     };
 }

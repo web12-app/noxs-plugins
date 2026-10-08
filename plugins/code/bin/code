@@ -1,0 +1,107 @@
+#!/bin/sh
+# Noxs Code plugin — open any file or directory with Spck Editor.
+# Part of the Noxs Plugin Store (https://github.com/web12-app/noxs-plugins).
+#
+# Usage: code [path] [spck options]
+#   code                 serve the current directory
+#   code ~/project       serve a project directory
+#   code notes.md        serve the directory containing notes.md
+#   code . -p 8080       forward extra options to the Spck CLI
+#
+# First run installs Node.js/npm (via apt when missing) and the Spck CLI
+# (npm install -g spck), then starts `spck` in this shell so the first-run
+# sign-in prompts stay interactive. Open Spck Editor (mobile app or
+# https://spck.io) afterwards and connect to this device to open and edit
+# files inside the served directory.
+
+set -eu
+
+usage() {
+    cat <<'EOF'
+code — open files with Spck Editor (https://spck.io)
+
+Usage:
+  code [path] [spck options]
+
+Examples:
+  code                 Serve the current directory
+  code ~/projects/app  Serve a project directory
+  code main.c          Serve the directory containing main.c
+
+How it works:
+  1. Installs Node.js/npm when they are missing (Debian apt).
+  2. Installs the Spck CLI with: npm install -g spck
+  3. Starts `spck` rooted at the file's directory.
+  4. Open Spck Editor (mobile app or https://spck.io), sign in and
+     connect to this device — then open and edit any file inside
+     the served directory.
+
+Extra options after the path are forwarded to `spck` (see: spck --help).
+EOF
+}
+
+case "${1:-}" in
+    -h|--help|help)
+        usage
+        exit 0
+        ;;
+esac
+
+# Resolve the target to an absolute guest path while the shell still knows
+# the caller's working directory — `code` must work from ANY path.
+target="${1:-.}"
+case "$target" in
+    /*) ;;
+    *) target="$PWD/$target" ;;
+esac
+if [ "$#" -gt 0 ]; then
+    shift
+fi
+
+if [ ! -e "$target" ]; then
+    printf 'code: %s does not exist\n' "$target" >&2
+    exit 2
+fi
+
+# A single file opens the editor rooted at its directory; a directory is
+# served as-is.
+if [ -f "$target" ]; then
+    root="$(dirname "$target")"
+else
+    root="$target"
+fi
+if [ ! -d "$root" ]; then
+    printf 'code: %s is not a directory\n' "$root" >&2
+    exit 2
+fi
+
+# Noxs sessions usually run as the `noxs` user; elevate through the
+# preconfigured sudo only when the shell is not already root.
+as_root() {
+    if [ "$(id -u)" = "0" ]; then
+        "$@"
+    else
+        sudo "$@"
+    fi
+}
+
+if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
+    printf 'code: installing Node.js and npm (required by the Spck CLI)...\n'
+    DEBIAN_FRONTEND=noninteractive
+    export DEBIAN_FRONTEND
+    as_root apt-get update -qq
+    as_root apt-get install -y -qq nodejs npm
+fi
+
+if ! command -v spck >/dev/null 2>&1; then
+    printf 'code: installing the Spck CLI (npm install -g spck)...\n'
+    as_root npm install --silent --global spck
+fi
+
+printf 'code: serving %s with Spck Editor\n' "$root"
+printf 'code: first run asks you to sign in to Spck — follow the prompts.\n'
+printf 'code: then open Spck Editor (app or https://spck.io) and connect to\n'
+printf 'code: this device to open and edit files inside %s\n' "$root"
+
+cd "$root"
+exec spck -r "$root" "$@"

@@ -14,6 +14,7 @@ noxs-plugins/
 ├── registry.json              # Plugin Store registry (what the store lists)
 ├── templates/basic/           # Starter template for new plugins
 ├── plugins/hello/             # Example plugin (install: nx plug install hello)
+├── plugins/code/              # Code plugin — open files with Spck Editor
 ├── scripts/
 │   ├── validate-plugin.mjs    # Metadata + structure validation (build gate)
 │   ├── build-plugin.mjs       # esbuild bundling -> dist/plugin.js
@@ -31,6 +32,7 @@ my-plugin/
 ├── plugin.json    # metadata (id, name, version, permissions, ...)
 ├── README.md      # shown on the plugin details page
 ├── icon.svg       # logo shown in the store (svg/png/webp/jpg)
+├── bin/           # optional guest command scripts (see below)
 └── src/
     └── main.js    # entry — default-exports { activate, deactivate }
 ```
@@ -85,6 +87,22 @@ Permissions are enforced inside the Noxs host — a plugin cannot reach
 Android APIs or private Noxs objects, and a broken plugin cannot crash
 Noxs.
 
+### Guest command scripts (bin/)
+
+A plugin can ship real terminal commands. Put executable scripts (starting
+with a `#!` shebang) into a `bin/` folder; the Noxs Plugin Manager installs
+each `bin/<name>` as `<name>` in the guest `/usr/local/bin` at install time,
+so the command works from **any path** in the user's own shell. Rules:
+
+- only plugins granted the `terminal` permission get commands installed
+- script names must match `^[a-z0-9][a-z0-9-]{1,63}$`
+- scripts must start with a `#!` shebang and stay under 128 KB
+- existing foreign files are never overwritten; every Noxs-installed
+  command carries an ownership marker so uninstall/disable removes exactly
+  what the plugin installed
+
+See `plugins/code/bin/code` for a complete example.
+
 ## Build & validate
 
 ```sh
@@ -94,8 +112,9 @@ npm run build:all     # bundle every plugin -> dist/
 ```
 
 Each plugin build writes `dist/plugin.js`, `dist/plugin.json`,
-`dist/README.md` and `dist/icon.svg`. Validation failures abort the
-build — invalid metadata is never ignored.
+`dist/README.md` and `dist/icon.svg` (plus `dist/bin/` when the plugin
+ships guest command scripts). Validation failures abort the build —
+invalid metadata is never ignored.
 
 ## Releasing
 

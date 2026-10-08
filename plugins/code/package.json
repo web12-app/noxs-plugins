@@ -1,0 +1,8 @@
+{
+  "name": "noxs-plugin-code",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Noxs Code plugin — open and edit files from any path with the Spck Editor CLI",
+  "license": "MIT",
+  "author": "CrossberryWeb"
+}
