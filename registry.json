@@ -2,6 +2,43 @@
   "version": 1,
   "plugins": [
     {
+      "id": "code",
+      "name": "Code",
+      "version": "1.0.0",
+      "description": "Open and edit files from any path with the Spck Editor CLI",
+      "logo": "icon.svg",
+      "readme": "README.md",
+      "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/code/icon.svg",
+      "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/code/README.md",
+      "release": "1.0.0",
+      "permissions": [
+        "ui",
+        "terminal",
+        "network"
+      ],
+      "category": "Developer Tools",
+      "author": "CrossberryWeb",
+      "license": "MIT",
+      "keywords": [
+        "code",
+        "editor",
+        "spck",
+        "files",
+        "terminal",
+        "developer tools"
+      ],
+      "homepage": "https://github.com/web12-app/noxs-plugins",
+      "repository": "https://github.com/web12-app/noxs-plugins",
+      "commands": [
+        "code"
+      ],
+      "minimumNoxsVersion": "0.12.0",
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/code-v1.0.0/code-1.0.0.noxs-plugin",
+      "checksum": "85ce54daf06f22d536a8d20e1397569a8ca20de034ee423b4a4e3aaf1d9a1261",
+      "updatedAt": "2026-10-08T01:31:46.705Z",
+      "releaseTag": "code-v1.0.0"
+    },
+    {
       "id": "hello",
       "name": "Hello",
       "version": "1.0.0",
