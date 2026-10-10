@@ -232,6 +232,31 @@ have() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Downloads over HTTPS with whichever fetch tool exists. curl and wget are
+# both absent on a bare Debian base — install_fetch_tools() handles that.
+fetch_to() {
+    if have curl; then
+        curl -fsSL -o "$2" "$1"
+    elif have wget; then
+        wget -q -O "$2" "$1"
+    else
+        return 127
+    fi
+}
+
+# The official Debian base image ships neither curl nor wget; the Noxs
+# rootfs ships both only after 'nx cert-fix' (or a manual apt install).
+install_fetch_tools() {
+    if have curl || have wget; then
+        return 0
+    fi
+    have apt-get || return 1
+    printf '%s: neither curl nor wget is installed - trying apt (needs sudo)...\n' "$PROG"
+    DEBIAN_FRONTEND=noninteractive
+    export DEBIAN_FRONTEND
+    as_root apt-get install -y --no-install-recommends curl wget
+}
+
 confirm() {
     [ -t 0 ] || return 1
     printf '%s [y/N] ' "$1"
@@ -258,12 +283,16 @@ install_ytdlp() {
         aarch64|arm64) asset=yt-dlp_linux_aarch64 ;;
         *) die "no prebuilt yt-dlp for $arch — install it manually (https://github.com/yt-dlp/yt-dlp)" ;;
     esac
-    have curl || die 'curl is required to install yt-dlp (sudo apt-get install curl)'
+    if ! install_fetch_tools; then
+        printf '%s: run "nx cert-fix" (Noxs 0.13.1 or newer) to repair apt\n' "$PROG" >&2
+        printf '%s: or install a fetch tool yourself: sudo apt-get install -y curl wget\n' "$PROG" >&2
+        exit 1
+    fi
     base=https://github.com/yt-dlp/yt-dlp/releases/latest/download
     tmpdir=$(mktemp -d) || die 'mktemp failed'
     printf '%s: downloading yt-dlp (%s)...\n' "$PROG" "$asset"
-    if ! curl -fsSL -o "$tmpdir/yt-dlp" "$base/$asset" ||
-        ! curl -fsSL -o "$tmpdir/SUMS" "$base/SHA2-256SUMS"; then
+    if ! fetch_to "$base/$asset" "$tmpdir/yt-dlp" ||
+        ! fetch_to "$base/SHA2-256SUMS" "$tmpdir/SUMS"; then
         rm -rf "$tmpdir"
         die 'the yt-dlp download failed — check the network and try again'
     fi
@@ -295,6 +324,7 @@ if ! have yt-dlp; then
         printf '%s: install yt-dlp yourself, then retry:\n' "$PROG" >&2
         printf '%s:   mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/yt-dlp \\\n' "$PROG" >&2
         printf '%s:     https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp && chmod 755 ~/.local/bin/yt-dlp\n' "$PROG" >&2
+        printf '%s: (wget works too: wget -O ~/.local/bin/yt-dlp <the same URL>)\n' "$PROG" >&2
         exit 1
     fi
 fi

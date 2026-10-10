@@ -1,7 +1,7 @@
 {
   "id": "youtube-downloader",
   "name": "YouTube Downloader",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Download videos or audio from single YouTube links you are authorized to save, using yt-dlp inside Noxs",
   "logo": "icon.svg",
   "readme": "README.md",

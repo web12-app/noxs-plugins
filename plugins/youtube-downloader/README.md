@@ -58,7 +58,9 @@ enforced, and the destination is always a folder inside your home directory.
 
 The first run offers to install `yt-dlp` (official release, SHA2-256 verified
 against the project checksums) and `ffmpeg` (Debian apt) — nothing is installed
-without your confirmation. The download then runs in the foreground of your own
+without your confirmation. On a bare Debian base without `curl` and `wget`, the
+command first tries to install them via apt; if apt itself cannot find packages
+(empty package lists), run `nx cert-fix` once (Noxs 0.13.1 or newer) and retry. The download then runs in the foreground of your own
 shell: progress is live and Ctrl+C stops it. Use the plugin window instead when
 you prefer the progress bar, stage display and Cancel button for detached
 downloads.
@@ -72,7 +74,7 @@ downloads.
 | `yt-dlp` | downloads the video | detected; installable with consent |
 | `ffmpeg` | merges video and audio, converts to MP3/M4A/Opus | detected; installable with consent |
 | `setsid`, `base64` | detached downloads and safe argument encoding | detected; part of the base system |
-| `curl` | downloading the yt-dlp release (only needed for the install) | detected; install it with `sudo apt-get install -y curl` if missing |
+| `curl` or `wget` | downloading the yt-dlp release (only needed for the install) | either works; when both are missing the `yt` command tries `apt-get install curl wget` and suggests `nx cert-fix` (Noxs 0.13.1+) |
 | A JavaScript runtime (`deno` or `node`) | current yt-dlp needs one to solve YouTube's page challenges | detected and reported; not installed automatically |
 | Network access in the guest | fetching the video, and the tool install | used only when you start a download or confirm an install |
 
