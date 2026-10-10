@@ -1,0 +1,13 @@
+{
+  "name": "noxs-plugin-youtube-downloader",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Noxs YouTube Downloader plugin — yt-dlp driven video and audio downloads from single YouTube links",
+  "license": "MIT",
+  "author": "CrossberryWeb",
+  "type": "module",
+  "scripts": {
+    "build": "node ../../scripts/build-plugin.mjs .",
+    "validate": "node ../../scripts/validate-plugin.mjs ."
+  }
+}
