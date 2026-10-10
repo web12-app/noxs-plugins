@@ -4,13 +4,13 @@
     {
       "id": "code",
       "name": "Code",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Open and edit files from any path with the Spck Editor CLI",
       "logo": "icon.svg",
       "readme": "README.md",
       "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/code/icon.svg",
       "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/code/README.md",
-      "release": "1.0.0",
+      "release": "1.0.1",
       "permissions": [
         "ui",
         "terminal",
@@ -33,10 +33,17 @@
         "code"
       ],
       "minimumNoxsVersion": "0.12.0",
-      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/code-v1.0.0/code-1.0.0.noxs-plugin",
-      "checksum": "85ce54daf06f22d536a8d20e1397569a8ca20de034ee423b4a4e3aaf1d9a1261",
-      "updatedAt": "2026-10-08T01:31:46.705Z",
-      "releaseTag": "code-v1.0.0"
+      "sdkVersion": "0.0.1",
+      "minimumSdkVersion": "0.0.1",
+      "apiFeatures": [
+        "logging",
+        "ui",
+        "terminal"
+      ],
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/code-v1.0.1/code-1.0.1.noxs-plugin",
+      "checksum": "6922e65f648d882441830daf204702022f7cc054e79ca704f3d47e0510ef2acf",
+      "updatedAt": "2026-10-10T11:06:03.352Z",
+      "releaseTag": "code-v1.0.1"
     },
     {
       "id": "hello",
