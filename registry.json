@@ -46,6 +46,51 @@
       "releaseTag": "code-v1.0.1"
     },
     {
+      "id": "header-auditor",
+      "name": "Header Auditor",
+      "version": "0.1.0",
+      "description": "Fetch and grade HTTP security headers (CSP, HSTS, COOP and more) for a target site",
+      "logo": "icon.svg",
+      "readme": "README.md",
+      "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/header-auditor/icon.svg",
+      "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/header-auditor/README.md",
+      "release": "0.1.0",
+      "permissions": [
+        "ui",
+        "terminal"
+      ],
+      "category": "Security Tools",
+      "author": "CrossberryWeb",
+      "license": "MIT",
+      "keywords": [
+        "headers",
+        "csp",
+        "hsts",
+        "http",
+        "hardening",
+        "security",
+        "audit",
+        "security tools"
+      ],
+      "homepage": "https://github.com/web12-app/noxs-plugins",
+      "repository": "https://github.com/web12-app/noxs-plugins",
+      "commands": [
+        "header-auditor"
+      ],
+      "minimumNoxsVersion": "0.12.0",
+      "sdkVersion": "0.0.2",
+      "minimumSdkVersion": "0.0.1",
+      "apiFeatures": [
+        "logging",
+        "ui",
+        "terminal"
+      ],
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/header-auditor-v0.1.0/header-auditor-0.1.0.noxs-plugin",
+      "checksum": "bd07ae8793b22b6134f827678434640a3f16d3b68b9b35035fd4258586b08af3",
+      "updatedAt": "2026-10-10T18:49:25.752Z",
+      "releaseTag": "header-auditor-v0.1.0"
+    },
+    {
       "id": "hello",
       "name": "Hello",
       "version": "1.0.1",
