@@ -41,13 +41,13 @@
     {
       "id": "hello",
       "name": "Hello",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Example Noxs plugin",
       "logo": "icon.svg",
       "readme": "README.md",
       "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/hello/icon.svg",
       "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/hello/README.md",
-      "release": "1.0.0",
+      "release": "1.0.1",
       "permissions": [
         "ui"
       ],
@@ -65,10 +65,16 @@
         "hello"
       ],
       "minimumNoxsVersion": "0.11.0",
-      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/hello-v1.0.0/hello-1.0.0.noxs-plugin",
-      "checksum": "06489e5b06aec433deb144e070afd8f57b7822b00b8cafd27cf6f10f5e1113cf",
-      "updatedAt": "2026-10-07T17:02:51.263Z",
-      "releaseTag": "hello-v1.0.0"
+      "sdkVersion": "0.0.1",
+      "minimumSdkVersion": "0.0.1",
+      "apiFeatures": [
+        "logging",
+        "ui"
+      ],
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/hello-v1.0.1/hello-1.0.1.noxs-plugin",
+      "checksum": "008e203990b34ec1b3bfef3df82d474f09febd5ac57c2f0f35e7073b9e2cc8f5",
+      "updatedAt": "2026-10-10T11:05:54.940Z",
+      "releaseTag": "hello-v1.0.1"
     },
     {
       "id": "youtube-downloader",
