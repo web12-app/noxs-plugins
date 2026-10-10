@@ -389,6 +389,50 @@
       "releaseTag": "whois-lookup-v0.1.0"
     },
     {
+      "id": "wp-scanner",
+      "name": "WP Scanner",
+      "version": "0.1.0",
+      "description": "Gentle GET-only WordPress recon: version, REST users, themes and readme exposure",
+      "logo": "icon.svg",
+      "readme": "README.md",
+      "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/wp-scanner/icon.svg",
+      "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/wp-scanner/README.md",
+      "release": "0.1.0",
+      "permissions": [
+        "ui",
+        "terminal"
+      ],
+      "category": "Security Tools",
+      "author": "CrossberryWeb",
+      "license": "MIT",
+      "keywords": [
+        "wordpress",
+        "cms",
+        "recon",
+        "wp-json",
+        "security",
+        "audit",
+        "security tools"
+      ],
+      "homepage": "https://github.com/web12-app/noxs-plugins",
+      "repository": "https://github.com/web12-app/noxs-plugins",
+      "commands": [
+        "wp-scanner"
+      ],
+      "minimumNoxsVersion": "0.12.0",
+      "sdkVersion": "0.0.2",
+      "minimumSdkVersion": "0.0.1",
+      "apiFeatures": [
+        "logging",
+        "ui",
+        "terminal"
+      ],
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/wp-scanner-v0.1.0/wp-scanner-0.1.0.noxs-plugin",
+      "checksum": "93bee04d44057e7316ce3dbf85e9ef6148c551fbe965dbce3f3cab9b2a831e54",
+      "updatedAt": "2026-10-10T18:58:51.982Z",
+      "releaseTag": "wp-scanner-v0.1.0"
+    },
+    {
       "id": "youtube-downloader",
       "name": "YouTube Downloader",
       "version": "0.2.1",
