@@ -173,6 +173,51 @@
       "releaseTag": "hello-v1.0.1"
     },
     {
+      "id": "payload-lab",
+      "name": "Payload Lab",
+      "version": "0.1.0",
+      "description": "Offline encode/decode/hash workbench: base64, hex, URL, SHA-2 and JWT inspection",
+      "logo": "icon.svg",
+      "readme": "README.md",
+      "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/payload-lab/icon.svg",
+      "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/payload-lab/README.md",
+      "release": "0.1.0",
+      "permissions": [
+        "ui",
+        "terminal"
+      ],
+      "category": "Security Tools",
+      "author": "CrossberryWeb",
+      "license": "MIT",
+      "keywords": [
+        "encoder",
+        "decoder",
+        "hash",
+        "base64",
+        "jwt",
+        "sha256",
+        "offline",
+        "security tools"
+      ],
+      "homepage": "https://github.com/web12-app/noxs-plugins",
+      "repository": "https://github.com/web12-app/noxs-plugins",
+      "commands": [
+        "payload-lab"
+      ],
+      "minimumNoxsVersion": "0.12.0",
+      "sdkVersion": "0.0.2",
+      "minimumSdkVersion": "0.0.1",
+      "apiFeatures": [
+        "logging",
+        "ui",
+        "terminal"
+      ],
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/payload-lab-v0.1.0/payload-lab-0.1.0.noxs-plugin",
+      "checksum": "79cfcc35af97793db8ad4e91e8fa3b84263391661b7bba4a8fea292e711c2afc",
+      "updatedAt": "2026-10-10T18:58:15.552Z",
+      "releaseTag": "payload-lab-v0.1.0"
+    },
+    {
       "id": "recon-scope",
       "name": "Recon Scope",
       "version": "0.1.0",
