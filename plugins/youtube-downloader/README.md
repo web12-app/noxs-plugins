@@ -21,7 +21,47 @@ nx plug install youtube-downloader
 ```
 
 The plugin window opens when it is activated. Required tools can be installed
-from inside the window (see [Install the tools](#install-the-tools)).
+from inside the window (see [Install the tools](#install-the-tools)). From
+version 0.2.0 the install also adds a `yt` command to the Noxs shell — see
+[Run it from the shell](#run-it-from-the-shell--the-yt-command).
+
+## Run it from the shell — the `yt` command
+
+Installing the plugin (0.2.0 or newer) also installs a `yt` command into the
+Noxs shell, so you can download straight from any terminal session without
+opening the plugin window:
+
+```sh
+yt https://youtu.be/VIDEO_ID                 # best MP4 video
+yt -a https://youtu.be/VIDEO_ID              # best MP3 audio
+yt -a -f opus -q 192 https://youtu.be/VIDEO_ID
+yt -q 720 -f mkv https://youtu.be/VIDEO_ID
+yt -d '~/Music/YouTube' -a https://youtu.be/VIDEO_ID
+yt -l https://youtu.be/VIDEO_ID              # list the available streams
+yt --help
+```
+
+Options mirror the plugin window:
+
+| Option | Values | Default |
+| --- | --- | --- |
+| `-a`, `--audio` | switch to audio mode | video mode |
+| `-f`, `--format` | video: `mp4` `mkv` `webm` — audio: `mp3` `m4a` `opus` | `mp4` / `mp3` |
+| `-q`, `--quality` | video: `best` `1080` `720` `480` `360` — audio: `best` `320` `192` `128` | `best` |
+| `-d`, `--dest` | a folder inside your home directory | `~/Downloads/YouTube` |
+| `-l`, `--list` | list the streams yt-dlp sees for the link, then exit | |
+| `-V`, `--version` | print the yt-dlp version | |
+
+The same safety rules as the window apply: only YouTube links, single videos
+only (playlists, channels and search pages are refused), `--no-playlist` always
+enforced, and the destination is always a folder inside your home directory.
+
+The first run offers to install `yt-dlp` (official release, SHA2-256 verified
+against the project checksums) and `ffmpeg` (Debian apt) — nothing is installed
+without your confirmation. The download then runs in the foreground of your own
+shell: progress is live and Ctrl+C stops it. Use the plugin window instead when
+you prefer the progress bar, stage display and Cancel button for detached
+downloads.
 
 ## Requirements
 
@@ -234,6 +274,7 @@ through yt-dlp and the approved install commands.
 | `src/main.js` | Plugin window, status polling and actions |
 | `src/request.js` | Request-file format, validation and yt-dlp option mapping |
 | `src/shell.js` | Guest command builders (safe encoding) and output parsers |
+| `bin/yt` | Guest command shim — the `yt` terminal command (installed into `/usr/local/bin`) |
 | `icon.svg` | Logo shown in the Plugin Store |
 | `README.md` | This document |
 

@@ -1,0 +1,367 @@
+#!/bin/sh
+# Noxs YouTube Downloader plugin — download from the Noxs shell.
+# Part of the Noxs Plugin Store (https://github.com/web12-app/noxs-plugins).
+#
+# Usage: yt [options] <url>
+#   yt https://youtu.be/VIDEO_ID              best mp4 video
+#   yt -a https://youtu.be/VIDEO_ID           best mp3 audio
+#   yt -a -f opus -q 192 <url>                opus audio, 192 kbps
+#   yt -q 720 -f mkv <url>                    720p mkv video
+#   yt -d '~/Music/YouTube' -a <url>          custom home folder
+#   yt -l <url>                               list available streams
+#
+# The link and folder are validated against the same rules as the plugin
+# window (YouTube hosts only, single video, folders inside your home).
+# yt-dlp is installed from the official release with a SHA2-256 checksum
+# check; ffmpeg is offered when merging or audio conversion needs it.
+# Runs yt-dlp in the foreground of your own shell — Ctrl+C stops it.
+
+set -eu
+
+PROG=yt
+# shellcheck disable=SC2088  # display form on purpose — parsed back to $HOME below
+DEFAULT_DEST='~/Downloads/YouTube'
+
+die() {
+    printf '%s: %s\n' "$PROG" "$*" >&2
+    exit 2
+}
+
+usage() {
+    cat <<'EOF'
+yt — YouTube Downloader for the Noxs shell
+
+Usage:
+  yt [options] <url>
+
+Options:
+  -a, --audio        audio only (default: video)
+  -f, --format FMT   video: mp4 | mkv | webm        (default mp4)
+                     audio: mp3 | m4a | opus        (default mp3)
+  -q, --quality Q    video: best | 1080 | 720 | 480 | 360   (max height)
+                     audio: best | 320 | 192 | 128          (kbps)
+  -d, --dest DIR     folder inside your home (default ~/Downloads/YouTube)
+  -l, --list         list the streams yt-dlp sees for the link, then exit
+  -V, --version      print the yt-dlp version
+  -h, --help         this help
+
+Examples:
+  yt https://youtu.be/VIDEO_ID
+  yt -a https://www.youtube.com/watch?v=VIDEO_ID
+  yt -a -f opus -q 192 https://youtu.be/VIDEO_ID
+  yt -q 720 https://youtu.be/VIDEO_ID
+  yt -l https://youtu.be/VIDEO_ID
+
+Only download videos you own or are authorized to save.
+EOF
+}
+
+# ---------------------------------------------------------------- options
+mode=video
+format=''
+quality=best
+dest=$DEFAULT_DEST
+list_only=0
+url=''
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -a|--audio) mode=audio ;;
+        -f|--format)
+            [ "$#" -ge 2 ] || die "option $1 needs a value"
+            format=$2
+            shift
+            ;;
+        -q|--quality)
+            [ "$#" -ge 2 ] || die "option $1 needs a value"
+            quality=$2
+            shift
+            ;;
+        -d|--dest)
+            [ "$#" -ge 2 ] || die "option $1 needs a value"
+            dest=$2
+            shift
+            ;;
+        -l|--list) list_only=1 ;;
+        -V|--version)
+            if command -v yt-dlp >/dev/null 2>&1; then
+                exec yt-dlp --version
+            fi
+            die 'yt-dlp is not installed yet — run any download and consent to the install'
+            ;;
+        -h|--help|help) usage; exit 0 ;;
+        --) shift; break ;;
+        -*) die "unknown option: $1 (see: yt --help)" ;;
+        *)
+            if [ -n "$url" ]; then
+                die 'one video link at a time'
+            fi
+            url=$1
+            ;;
+    esac
+    shift
+done
+[ "$#" -eq 0 ] || die 'unexpected extra arguments after the link'
+[ -n "$url" ] || { usage; exit 2; }
+
+case "$url" in
+    *[[:space:]]*) die 'the link must be one word without spaces' ;;
+esac
+
+# ------------------------------------------------------------ url checks
+# Same allowlist and shapes as the plugin window (src/request.js):
+# single videos only — playlists, channels and search pages are refused.
+case "$url" in
+    https://youtu.be/*|https://youtube.com/*|https://www.youtube.com/*|https://m.youtube.com/*|https://music.youtube.com/*) ;;
+    *) die 'only YouTube links are supported (youtube.com, m.youtube.com, music.youtube.com, youtu.be)' ;;
+esac
+
+no_scheme=${url#https://}
+host=${no_scheme%%/*}
+rest=${no_scheme#"$host"}
+case "$rest" in
+    *\?*) qs=${rest#*\?} ;;
+    *) qs='' ;;
+esac
+path=${rest%%\?*}
+
+valid_id() {
+    case "$1" in
+        ''|*[!A-Za-z0-9_-]*) return 1 ;;
+    esac
+    [ "${#1}" -ge 6 ]
+}
+
+case "$host" in
+    youtu.be)
+        vid=${path#/}
+        valid_id "$vid" || die 'paste a single video link (https://youtu.be/VIDEO_ID)'
+        ;;
+    *youtube.com)
+        case "$path" in
+            /watch)
+                vid=''
+                old_ifs=$IFS
+                IFS='&'
+                # shellcheck disable=SC2086  # word-splitting on '&' is the point here
+                for kv in $qs; do
+                    case "$kv" in
+                        v=*) vid=${kv#v=}; break ;;
+                    esac
+                done
+                IFS=$old_ifs
+                valid_id "$vid" || die 'the watch link is missing its video id (?v=VIDEO_ID)'
+                ;;
+            /shorts/*|/live/*|/embed/*)
+                vid=${path#*/}
+                vid=${vid#*/}
+                vid=${vid%%/*}
+                valid_id "$vid" || die 'paste a single video link (missing video id)'
+                ;;
+            *) die 'paste a single video link (playlists, channels and search pages are not supported)' ;;
+        esac
+        ;;
+    *) die 'only YouTube links are supported' ;;
+esac
+
+case "$qs" in
+    *list=*)
+        printf '%s: the link contains a playlist — only this single video will be downloaded\n' "$PROG"
+        ;;
+esac
+
+# ----------------------------------------------------------- dest checks
+while :; do
+    case "$dest" in
+        */) dest=${dest%/} ;;
+        *) break ;;
+    esac
+done
+case "$dest" in
+    *//*) die 'the destination folder must not contain empty path parts' ;;
+esac
+case "$dest" in
+    "$HOME"/*) rel=${dest#"$HOME"/} ;;
+    '~'/*) rel=${dest#'~'/} ;;
+    /*) die 'the destination must be a folder inside your home directory (example: ~/Downloads/YouTube)' ;;
+    '') die 'the destination folder is empty' ;;
+    *) rel=$dest ;;
+esac
+case "$rel" in
+    ''|'~') die 'the destination must name a folder inside your home directory' ;;
+esac
+old_ifs=$IFS
+IFS='/'
+# shellcheck disable=SC2086  # word-splitting on '/' is the point here
+for part in $rel; do
+    case "$part" in
+        ''|'.'|'..') die 'the destination must not contain empty, "." or ".." parts' ;;
+    esac
+done
+IFS=$old_ifs
+dest_dir=$HOME/$rel
+
+# --------------------------------------------------------- mode validation
+if [ "$mode" = video ]; then
+    case "$format" in '') format=mp4 ;; esac
+    case "$format" in
+        mp4|mkv|webm) ;;
+        *) die "format for video must be one of: mp4, mkv, webm (got \"$format\")" ;;
+    esac
+    case "$quality" in
+        best|1080|720|480|360) ;;
+        *) die "quality for video must be one of: best, 1080, 720, 480, 360 (got \"$quality\")" ;;
+    esac
+else
+    case "$format" in '') format=mp3 ;; esac
+    case "$format" in
+        mp3|m4a|opus) ;;
+        *) die "format for audio must be one of: mp3, m4a, opus (got \"$format\")" ;;
+    esac
+    case "$quality" in
+        best|320|192|128) ;;
+        *) die "quality for audio must be one of: best, 320, 192, 128 (got \"$quality\")" ;;
+    esac
+fi
+
+# ------------------------------------------------------------ dependencies
+PATH=$HOME/.local/bin:$PATH
+export PATH
+
+have() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+confirm() {
+    [ -t 0 ] || return 1
+    printf '%s [y/N] ' "$1"
+    reply=''
+    read -r reply || return 1
+    case "$reply" in
+        y|Y|yes|Yes|YES) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+as_root() {
+    if [ "$(id -u)" = 0 ]; then
+        "$@"
+    else
+        sudo "$@"
+    fi
+}
+
+install_ytdlp() {
+    arch=$(uname -m)
+    case "$arch" in
+        x86_64) asset=yt-dlp_linux ;;
+        aarch64|arm64) asset=yt-dlp_linux_aarch64 ;;
+        *) die "no prebuilt yt-dlp for $arch — install it manually (https://github.com/yt-dlp/yt-dlp)" ;;
+    esac
+    have curl || die 'curl is required to install yt-dlp (sudo apt-get install curl)'
+    base=https://github.com/yt-dlp/yt-dlp/releases/latest/download
+    tmpdir=$(mktemp -d) || die 'mktemp failed'
+    printf '%s: downloading yt-dlp (%s)...\n' "$PROG" "$asset"
+    if ! curl -fsSL -o "$tmpdir/yt-dlp" "$base/$asset" ||
+        ! curl -fsSL -o "$tmpdir/SUMS" "$base/SHA2-256SUMS"; then
+        rm -rf "$tmpdir"
+        die 'the yt-dlp download failed — check the network and try again'
+    fi
+    expect=$(awk -v f="$asset" '$2 == f {print $1}' "$tmpdir/SUMS")
+    got=$(sha256sum "$tmpdir/yt-dlp" | awk '{print $1}')
+    if [ -z "$expect" ] || [ "$expect" != "$got" ]; then
+        rm -rf "$tmpdir"
+        die 'yt-dlp checksum mismatch — aborted, nothing was installed'
+    fi
+    mkdir -p "$HOME/.local/bin"
+    chmod 755 "$tmpdir/yt-dlp"
+    mv -f "$tmpdir/yt-dlp" "$HOME/.local/bin/yt-dlp"
+    rm -rf "$tmpdir"
+    printf '%s: installed yt-dlp to %s\n' "$PROG" "$HOME/.local/bin/yt-dlp"
+}
+
+install_ffmpeg() {
+    have apt-get || return 1
+    DEBIAN_FRONTEND=noninteractive
+    export DEBIAN_FRONTEND
+    as_root apt-get update -qq || return 1
+    as_root apt-get install -y -qq ffmpeg || return 1
+}
+
+if ! have yt-dlp; then
+    if confirm 'yt-dlp is not installed. Install it now (official release, checksum verified)?'; then
+        install_ytdlp
+    else
+        printf '%s: install yt-dlp yourself, then retry:\n' "$PROG" >&2
+        printf '%s:   mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/yt-dlp \\\n' "$PROG" >&2
+        printf '%s:     https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp && chmod 755 ~/.local/bin/yt-dlp\n' "$PROG" >&2
+        exit 1
+    fi
+fi
+
+if [ "$list_only" = 1 ]; then
+    exec yt-dlp -F --no-playlist --no-colors -- "$url"
+fi
+
+if [ "$mode" = audio ]; then
+    if ! have ffmpeg; then
+        if confirm 'ffmpeg is required for audio extraction. Install it now (apt)?'; then
+            install_ffmpeg || true
+        fi
+    fi
+    if ! have ffmpeg; then
+        printf '%s: audio conversion needs ffmpeg — install it with: sudo apt-get install ffmpeg\n' "$PROG" >&2
+        exit 1
+    fi
+    if [ "$quality" = best ]; then
+        audio_q=0
+    else
+        audio_q=${quality}K
+    fi
+    set -- \
+        --no-playlist --no-colors \
+        -o '%(title).120B [%(id)s].%(ext)s' \
+        -f 'ba/b' \
+        -x --audio-format "$format" --audio-quality "$audio_q" \
+        -P "$dest_dir" \
+        -- "$url"
+else
+    if ! have ffmpeg; then
+        if confirm 'ffmpeg is recommended for video merging (best quality). Install it now (apt)?'; then
+            install_ffmpeg || true
+        fi
+    fi
+    if have ffmpeg; then
+        if [ "$quality" = best ]; then
+            selector='bv*+ba/b'
+        else
+            selector="bv*[height<=$quality]+ba/b[height<=$quality]"
+        fi
+        set -- \
+            --no-playlist --no-colors \
+            -o '%(title).120B [%(id)s].%(ext)s' \
+            -f "$selector" \
+            --merge-output-format "$format" \
+            -P "$dest_dir" \
+            -- "$url"
+    else
+        printf '%s: no ffmpeg — falling back to the best single-file stream (usually lower quality)\n' "$PROG" >&2
+        set -- \
+            --no-playlist --no-colors \
+            -o '%(title).120B [%(id)s].%(ext)s' \
+            -f 'b' \
+            -P "$dest_dir" \
+            -- "$url"
+    fi
+fi
+
+mkdir -p -- "$dest_dir"
+if [ "$mode" = audio ]; then
+    printf '%s: %s audio (%s, %s)\n' "$PROG" "$format" "$quality" "$url"
+else
+    printf '%s: %s video (%s, %s)\n' "$PROG" "$format" "$quality" "$url"
+fi
+printf '%s: saving to %s\n' "$PROG" "$dest_dir"
+printf '%s: Ctrl+C stops the download.\n' "$PROG"
+
+exec yt-dlp "$@"
