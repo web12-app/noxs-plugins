@@ -133,6 +133,15 @@ jobs:
 
       - name: Update registry
         run: |
+          set -euo pipefail
+          git config user.name "noxs-release-bot"
+          git config user.email "actions@users.noreply.github.com"
+          # The checkout is detached at the tag (an ancestor of main). Move
+          # to the tip of main first so the registry update starts from the
+          # latest registry — otherwise the commit below conflicts with
+          # registry commits from other plugin releases landing in between.
+          git fetch origin main
+          git checkout -B release-registry origin/main
           node scripts/update-registry.mjs \
             --plugin "plugins/${{ steps.resolve.outputs.plugin }}" \
             --artifact "https://github.com/web12-app/noxs-plugins/releases/download/${{ steps.resolve.outputs.tag }}/${{ steps.package.outputs.artifact }}" \
