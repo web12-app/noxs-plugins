@@ -173,6 +173,51 @@
       "releaseTag": "hello-v1.0.1"
     },
     {
+      "id": "http-repeater",
+      "name": "HTTP Repeater",
+      "version": "0.1.0",
+      "description": "Replay hand-crafted HTTP requests with curl timing, headers and body preview",
+      "logo": "icon.svg",
+      "readme": "README.md",
+      "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/http-repeater/icon.svg",
+      "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/http-repeater/README.md",
+      "release": "0.1.0",
+      "permissions": [
+        "ui",
+        "terminal"
+      ],
+      "category": "Security Tools",
+      "author": "CrossberryWeb",
+      "license": "MIT",
+      "keywords": [
+        "http",
+        "curl",
+        "request",
+        "repeater",
+        "timing",
+        "api",
+        "security",
+        "security tools"
+      ],
+      "homepage": "https://github.com/web12-app/noxs-plugins",
+      "repository": "https://github.com/web12-app/noxs-plugins",
+      "commands": [
+        "http-repeater"
+      ],
+      "minimumNoxsVersion": "0.12.0",
+      "sdkVersion": "0.0.2",
+      "minimumSdkVersion": "0.0.1",
+      "apiFeatures": [
+        "logging",
+        "ui",
+        "terminal"
+      ],
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/http-repeater-v0.1.0/http-repeater-0.1.0.noxs-plugin",
+      "checksum": "5b36da016fdf911f583ce9feb08e47f89467ee51580508f15e7d24ed79aad142",
+      "updatedAt": "2026-10-10T18:59:25.335Z",
+      "releaseTag": "http-repeater-v0.1.0"
+    },
+    {
       "id": "payload-lab",
       "name": "Payload Lab",
       "version": "0.1.0",
