@@ -12,7 +12,7 @@
       ],
       "minimumNoxsVersion": "0.11.0",
       "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/sdk-v0.0.1/noxs-sdk-0.0.1.noxs-sdk",
-      "checksum": ""
+      "checksum": "51b0e5bb2a082165ffdfe3500ba683558a094cbec41dd378808dc9dd66a11065"
     },
     {
       "version": "0.0.2",
