@@ -84,6 +84,43 @@
       "releaseTag": "hello-v1.0.1"
     },
     {
+      "id": "sdk-demo",
+      "name": "SDK Demo",
+      "version": "0.1.0",
+      "description": "Minimal Noxs Plugin SDK example: a counter window with SDK logging",
+      "logo": "icon.svg",
+      "readme": "README.md",
+      "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/sdk-demo/icon.svg",
+      "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/sdk-demo/README.md",
+      "release": "0.1.0",
+      "permissions": [
+        "ui"
+      ],
+      "category": "Utilities",
+      "author": "CrossberryWeb",
+      "license": "MIT",
+      "keywords": [
+        "example",
+        "sdk",
+        "demo",
+        "starter"
+      ],
+      "homepage": "https://github.com/web12-app/noxs-plugins",
+      "repository": "https://github.com/web12-app/noxs-plugins",
+      "commands": [],
+      "minimumNoxsVersion": "0.11.0",
+      "sdkVersion": "0.0.1",
+      "minimumSdkVersion": "0.0.1",
+      "apiFeatures": [
+        "logging",
+        "ui"
+      ],
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/sdk-demo-v0.1.0/sdk-demo-0.1.0.noxs-plugin",
+      "checksum": "129dd7795a931ef431a47a0e4b9a32c8ab528fe6e64831430f8cc3a2beeb18ff",
+      "updatedAt": "2026-10-10T11:06:24.091Z",
+      "releaseTag": "sdk-demo-v0.1.0"
+    },
+    {
       "id": "youtube-downloader",
       "name": "YouTube Downloader",
       "version": "0.1.1",
