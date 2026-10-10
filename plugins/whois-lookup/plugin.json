@@ -1,0 +1,38 @@
+{
+  "id": "whois-lookup",
+  "name": "Whois Lookup",
+  "version": "0.1.0",
+  "description": "Registrar, dates, nameservers and status flags from whois records",
+  "logo": "icon.svg",
+  "readme": "README.md",
+  "main": "plugin.js",
+  "permissions": [
+    "ui",
+    "terminal"
+  ],
+  "commands": [
+    "whois-lookup"
+  ],
+  "minimumNoxsVersion": "0.12.0",
+  "sdkVersion": "0.0.2",
+  "minimumSdkVersion": "0.0.1",
+  "apiFeatures": [
+    "logging",
+    "ui",
+    "terminal"
+  ],
+  "author": "CrossberryWeb",
+  "license": "MIT",
+  "category": "Security Tools",
+  "keywords": [
+    "whois",
+    "registrar",
+    "domain",
+    "dns",
+    "osint",
+    "security",
+    "security tools"
+  ],
+  "homepage": "https://github.com/web12-app/noxs-plugins",
+  "repository": "https://github.com/web12-app/noxs-plugins"
+}

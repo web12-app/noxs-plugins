@@ -1,0 +1,13 @@
+{
+  "name": "noxs-plugin-ssl-inspector",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Noxs SSL Inspector plugin — inspect tls certificates and protocol support of a host with openssl",
+  "license": "MIT",
+  "author": "CrossberryWeb",
+  "type": "module",
+  "scripts": {
+    "build": "node ../../scripts/build-plugin.mjs .",
+    "validate": "node ../../scripts/validate-plugin.mjs ."
+  }
+}

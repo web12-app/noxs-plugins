@@ -1,0 +1,38 @@
+{
+  "id": "dirscan-lite",
+  "name": "DirScan Lite",
+  "version": "0.1.0",
+  "description": "Slow, polite directory and file discovery for websites you own or have permission to test",
+  "logo": "icon.svg",
+  "readme": "README.md",
+  "main": "plugin.js",
+  "permissions": [
+    "ui",
+    "terminal"
+  ],
+  "commands": [
+    "dirscan-lite"
+  ],
+  "minimumNoxsVersion": "0.12.0",
+  "sdkVersion": "0.0.2",
+  "minimumSdkVersion": "0.0.1",
+  "apiFeatures": [
+    "logging",
+    "ui",
+    "terminal"
+  ],
+  "author": "CrossberryWeb",
+  "license": "MIT",
+  "category": "Security Tools",
+  "keywords": [
+    "dirscan",
+    "directories",
+    "wordlist",
+    "discovery",
+    "web",
+    "security",
+    "security tools"
+  ],
+  "homepage": "https://github.com/web12-app/noxs-plugins",
+  "repository": "https://github.com/web12-app/noxs-plugins"
+}

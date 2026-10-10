@@ -1,0 +1,13 @@
+{
+  "name": "noxs-plugin-payload-lab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Noxs Payload Lab plugin — offline encode/decode/hash workbench: base64, hex, url, sha-2 and jwt inspection",
+  "license": "MIT",
+  "author": "CrossberryWeb",
+  "type": "module",
+  "scripts": {
+    "build": "node ../../scripts/build-plugin.mjs .",
+    "validate": "node ../../scripts/validate-plugin.mjs ."
+  }
+}

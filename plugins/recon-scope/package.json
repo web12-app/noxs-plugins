@@ -1,0 +1,13 @@
+{
+  "name": "noxs-plugin-recon-scope",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Noxs Recon Scope plugin — passive-first dns, whois and http recon for hosts you are authorized to assess",
+  "license": "MIT",
+  "author": "CrossberryWeb",
+  "type": "module",
+  "scripts": {
+    "build": "node ../../scripts/build-plugin.mjs .",
+    "validate": "node ../../scripts/validate-plugin.mjs ."
+  }
+}

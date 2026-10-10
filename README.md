@@ -116,6 +116,29 @@ so the command works from **any path** in the user's own shell. Rules:
 
 See `plugins/code/bin/code` for a complete example.
 
+## Security Tools
+
+The `Security Tools` category ships nine authorized-testing plugins built
+on one shared engine (dark terminal console UI, two-press consent with a
+2 minute window, request-file parameters, polite rate-limited scans and
+`AUTHORIZED USE ONLY` banners):
+
+| Plugin          | What it does                                              | Tools            |
+| --------------- | --------------------------------------------------------- | ---------------- |
+| `recon-scope`   | Passive DNS/whois/HTTP recon modules                      | host, whois, curl|
+| `port-probe`    | Sequential TCP port checks (max 32, delayed)              | nc or /dev/tcp   |
+| `header-auditor`| Security-header grading (HSTS, CSP, COOP, cookies)        | curl             |
+| `dirscan-lite`  | Polite path discovery (max 300 paths, min 0.5 s delay)    | curl             |
+| `ssl-inspector` | Certificate details, expiry countdown, TLS protocol probe | openssl          |
+| `whois-lookup`  | Registrar, dates, status flags, nameservers               | whois            |
+| `payload-lab`   | Offline base64/hex/URL encode-decode, hashes, JWT inspect | coreutils        |
+| `wp-scanner`    | GET-only WordPress recon (users, version, xmlrpc)         | curl             |
+| `http-repeater` | One-shot hand-crafted requests with curl timing           | curl             |
+
+Every scan requires explicit consent, writes results under
+`~/.noxs/<plugin-id>/`, and can be cancelled with **STOP**. See each
+plugin's README for the request-file reference and the legal disclaimer.
+
 ## Noxs Plugin SDK
 
 Plugins run against a versioned **Noxs Plugin SDK** — a documented,

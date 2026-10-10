@@ -1,0 +1,39 @@
+{
+  "id": "payload-lab",
+  "name": "Payload Lab",
+  "version": "0.1.0",
+  "description": "Offline encode/decode/hash workbench: base64, hex, URL, SHA-2 and JWT inspection",
+  "logo": "icon.svg",
+  "readme": "README.md",
+  "main": "plugin.js",
+  "permissions": [
+    "ui",
+    "terminal"
+  ],
+  "commands": [
+    "payload-lab"
+  ],
+  "minimumNoxsVersion": "0.12.0",
+  "sdkVersion": "0.0.2",
+  "minimumSdkVersion": "0.0.1",
+  "apiFeatures": [
+    "logging",
+    "ui",
+    "terminal"
+  ],
+  "author": "CrossberryWeb",
+  "license": "MIT",
+  "category": "Security Tools",
+  "keywords": [
+    "encoder",
+    "decoder",
+    "hash",
+    "base64",
+    "jwt",
+    "sha256",
+    "offline",
+    "security tools"
+  ],
+  "homepage": "https://github.com/web12-app/noxs-plugins",
+  "repository": "https://github.com/web12-app/noxs-plugins"
+}

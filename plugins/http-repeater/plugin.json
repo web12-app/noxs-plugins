@@ -1,0 +1,39 @@
+{
+  "id": "http-repeater",
+  "name": "HTTP Repeater",
+  "version": "0.1.0",
+  "description": "Replay hand-crafted HTTP requests with curl timing, headers and body preview",
+  "logo": "icon.svg",
+  "readme": "README.md",
+  "main": "plugin.js",
+  "permissions": [
+    "ui",
+    "terminal"
+  ],
+  "commands": [
+    "http-repeater"
+  ],
+  "minimumNoxsVersion": "0.12.0",
+  "sdkVersion": "0.0.2",
+  "minimumSdkVersion": "0.0.1",
+  "apiFeatures": [
+    "logging",
+    "ui",
+    "terminal"
+  ],
+  "author": "CrossberryWeb",
+  "license": "MIT",
+  "category": "Security Tools",
+  "keywords": [
+    "http",
+    "curl",
+    "request",
+    "repeater",
+    "timing",
+    "api",
+    "security",
+    "security tools"
+  ],
+  "homepage": "https://github.com/web12-app/noxs-plugins",
+  "repository": "https://github.com/web12-app/noxs-plugins"
+}
