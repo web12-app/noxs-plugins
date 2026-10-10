@@ -14,8 +14,6 @@ on:
   push:
     tags:
       - '*-v*'
-    tags-ignore:
-      - 'sdk-v*'
   workflow_dispatch:
     inputs:
       plugin:
@@ -29,7 +27,26 @@ permissions:
   contents: write
 
 jobs:
+  guard:
+    # sdk-v* tags belong to release-sdk.yml — skip this pipeline for them.
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.detect.outputs.skip }}
+    steps:
+      - name: Detect SDK tag
+        id: detect
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          if printf '%s' "$TAG" | grep -qE '^sdk-v'; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "sdk-v* tag detected — release-sdk.yml owns it"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
   release:
+    needs: guard
+    if: needs.guard.outputs.skip != 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
