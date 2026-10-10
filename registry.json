@@ -263,6 +263,51 @@
       "releaseTag": "payload-lab-v0.1.0"
     },
     {
+      "id": "port-probe",
+      "name": "Port Probe",
+      "version": "0.1.0",
+      "description": "Gentle sequential TCP port checks with delays for authorized network audits",
+      "logo": "icon.svg",
+      "readme": "README.md",
+      "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/port-probe/icon.svg",
+      "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/port-probe/README.md",
+      "release": "0.1.0",
+      "permissions": [
+        "ui",
+        "terminal"
+      ],
+      "category": "Security Tools",
+      "author": "CrossberryWeb",
+      "license": "MIT",
+      "keywords": [
+        "ports",
+        "tcp",
+        "scan",
+        "network",
+        "nc",
+        "audit",
+        "security",
+        "security tools"
+      ],
+      "homepage": "https://github.com/web12-app/noxs-plugins",
+      "repository": "https://github.com/web12-app/noxs-plugins",
+      "commands": [
+        "port-probe"
+      ],
+      "minimumNoxsVersion": "0.12.0",
+      "sdkVersion": "0.0.2",
+      "minimumSdkVersion": "0.0.1",
+      "apiFeatures": [
+        "logging",
+        "ui",
+        "terminal"
+      ],
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/port-probe-v0.1.0/port-probe-0.1.0.noxs-plugin",
+      "checksum": "3e48b6110126b515f044390b99788090c05b0c45d80cee874bc73801478c8024",
+      "updatedAt": "2026-10-10T19:00:25.806Z",
+      "releaseTag": "port-probe-v0.1.0"
+    },
+    {
       "id": "recon-scope",
       "name": "Recon Scope",
       "version": "0.1.0",
