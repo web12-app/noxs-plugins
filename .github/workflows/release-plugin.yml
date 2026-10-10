@@ -14,6 +14,8 @@ on:
   push:
     tags:
       - '*-v*'
+    tags-ignore:
+      - 'sdk-v*'
   workflow_dispatch:
     inputs:
       plugin:
