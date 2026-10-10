@@ -39,6 +39,8 @@ const LOGO_EXTENSIONS = ['.svg', '.png', '.webp', '.jpg', '.jpeg'];
 const REQUIRED_FIELDS = ['id', 'name', 'version', 'description', 'main', 'permissions', 'minimumNoxsVersion'];
 /** Guest command scripts (bin/) must stay small enough to ship as shims. */
 export const MAX_BIN_BYTES = 128 * 1024;
+/** Noxs Plugin SDK feature identifiers a plugin may require. */
+export const SDK_FEATURES = ['logging', 'ui', 'terminal', 'storage'];
 
 export class PluginValidationError extends Error {
     constructor(field, message) {
@@ -50,6 +52,19 @@ export class PluginValidationError extends Error {
 
 function fail(field, message) {
     throw new PluginValidationError(field, message);
+}
+
+/** Compares two MAJOR.MINOR.PATCH strings; null/invalid inputs return 0. */
+function compareSemver(a, b) {
+    const ka = SEMVER_RE.exec(a);
+    const kb = SEMVER_RE.exec(b);
+    if (!ka || !kb) return 0;
+    for (let i = 1; i <= 3; i += 1) {
+        const ai = Number(ka[i]);
+        const bi = Number(kb[i]);
+        if (ai !== bi) return ai < bi ? -1 : 1;
+    }
+    return 0;
 }
 
 function readPluginJson(pluginDir) {
@@ -143,6 +158,44 @@ export function validatePlugin(pluginDir) {
     // 8. minimumNoxsVersion
     if (typeof meta.minimumNoxsVersion !== 'string' || !SEMVER_RE.test(meta.minimumNoxsVersion)) {
         fail('minimumNoxsVersion', `must be MAJOR.MINOR.PATCH (got "${meta.minimumNoxsVersion}")`);
+    }
+
+    // 8b. Noxs Plugin SDK requirements (optional — a manifest without SDK
+    // fields is a legacy plugin and defaults to the initial stable SDK
+    // "0.0.1", never to anything newer).
+    const sdkVersion = meta.sdkVersion === undefined || meta.sdkVersion === null
+        ? '0.0.1'
+        : meta.sdkVersion;
+    if (typeof sdkVersion !== 'string' || !SEMVER_RE.test(sdkVersion)) {
+        fail('sdkVersion', `must be MAJOR.MINOR.PATCH (got "${sdkVersion}")`);
+    }
+    if (meta.minimumSdkVersion !== undefined && meta.minimumSdkVersion !== null) {
+        if (typeof meta.minimumSdkVersion !== 'string' || !SEMVER_RE.test(meta.minimumSdkVersion)) {
+            fail('minimumSdkVersion', `must be MAJOR.MINOR.PATCH (got "${meta.minimumSdkVersion}")`);
+        } else if (compareSemver(meta.minimumSdkVersion, sdkVersion) > 0) {
+            fail('minimumSdkVersion', 'must not exceed sdkVersion');
+        }
+    }
+    if (meta.maximumSdkVersion !== undefined && meta.maximumSdkVersion !== null) {
+        if (typeof meta.maximumSdkVersion !== 'string' || !SEMVER_RE.test(meta.maximumSdkVersion)) {
+            fail('maximumSdkVersion', `must be MAJOR.MINOR.PATCH (got "${meta.maximumSdkVersion}")`);
+        } else if (meta.minimumSdkVersion && SEMVER_RE.test(meta.minimumSdkVersion)) {
+            // Exclusive upper bound — it must sit strictly above the floor.
+            if (compareSemver(meta.maximumSdkVersion, meta.minimumSdkVersion) <= 0) {
+                fail('maximumSdkVersion', 'must be above minimumSdkVersion');
+            }
+        }
+    }
+    if (meta.apiFeatures !== undefined && meta.apiFeatures !== null) {
+        if (!Array.isArray(meta.apiFeatures)) fail('apiFeatures', 'must be an array of SDK feature ids');
+        for (const feature of meta.apiFeatures) {
+            if (typeof feature !== 'string' || !SDK_FEATURES.includes(feature)) {
+                fail('apiFeatures', `unknown SDK feature "${feature}" (allowed: ${SDK_FEATURES.join(', ')})`);
+            }
+        }
+        if (new Set(meta.apiFeatures).size !== meta.apiFeatures.length) {
+            fail('apiFeatures', 'contains duplicates');
+        }
     }
 
     // 9-10. logo (optional but strongly recommended; must exist when set)

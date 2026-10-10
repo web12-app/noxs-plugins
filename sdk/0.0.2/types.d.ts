@@ -1,0 +1,68 @@
+/*
+ * Noxs Plugin SDK 0.0.2 — TypeScript declarations (apiVersion 1).
+ * Features: logging, ui, terminal, storage.
+ */
+
+export as namespace NoxsSdk;
+
+export type SdkStorageValue = string | number | boolean | null | SdkStorageValue[] | { [key: string]: SdkStorageValue };
+
+export interface SdkWindow {
+  readonly id: string;
+  show(): void;
+  hide(): void;
+  close(): void;
+  setHTML(html: string): void;
+  setText(selector: string, text: string): void;
+  on(event: string, callback: (data: unknown) => void): void;
+  emit(event: string, data: unknown): void;
+}
+
+export interface SdkWindowParams {
+  title?: string;
+  width?: number;
+  height?: number;
+  id?: string;
+}
+
+export interface SdkExecResult {
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+}
+
+export interface NoxsSdkApi {
+  /** The SDK release this object implements ("0.0.2"). */
+  readonly version: string;
+  /** The API generation ("1"). Plugins never mix generations. */
+  readonly apiVersion: string;
+  /** Feature identifiers provided by this SDK release. */
+  readonly features: readonly string[];
+  log: {
+    info(message: unknown): void;
+    warn(message: unknown): void;
+    error(message: unknown): void;
+  };
+  ui: {
+    createWindow(params?: SdkWindowParams): SdkWindow;
+  };
+  terminal: {
+    exec(command: string): Promise<SdkExecResult>;
+  };
+  /** Plugin-scoped, bounded key/value storage (requires the "storage"
+   *  permission in plugin.json). */
+  storage: {
+    get(key: string): SdkStorageValue | undefined;
+    set(key: string, value: SdkStorageValue): boolean;
+    remove(key: string): boolean;
+    keys(): string[];
+  };
+}
+
+declare global {
+  interface Window {
+    noxs: {
+      sdk: NoxsSdkApi;
+    };
+  }
+}

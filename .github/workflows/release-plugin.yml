@@ -1,10 +1,13 @@
 # Noxs Plugin release workflow.
 #
 # Trigger: a tag shaped <plugin-id>-v<version> (example: hello-v1.0.0).
-# Pipeline: validate -> build -> package -> GitHub Release -> update registry.
+# Tags shaped sdk-v* belong to release-sdk.yml and are skipped here.
+# Pipeline: validate -> SDK compatibility check -> build -> package ->
+# GitHub Release -> update registry.
 # The workflow fails immediately on invalid plugin JSON, missing logo,
-# missing README, missing entry point, invalid version or build failure —
-# a broken plugin can never reach the Plugin Store registry.
+# missing README, missing entry point, invalid version, SDK incompatibility
+# or build failure — a broken plugin can never reach the Plugin Store
+# registry.
 name: release-plugin
 
 on:
@@ -51,6 +54,10 @@ jobs:
             echo "Invalid version: $VERSION" >&2; exit 1
           fi
           if [ ! -f "plugins/$PLUGIN/plugin.json" ]; then
+            if [ "$PLUGIN" = "sdk" ]; then
+              echo "sdk-v* tags are released by release-sdk.yml — nothing to do here"
+              exit 0
+            fi
             echo "Unknown plugin: $PLUGIN" >&2; exit 1
           fi
           echo "plugin=$PLUGIN" >> "$GITHUB_OUTPUT"
@@ -67,6 +74,15 @@ jobs:
 
       - name: Validate all plugins
         run: npm run validate
+
+      - name: Validate SDK releases
+        run: node scripts/validate-sdk.mjs
+
+      - name: Run SDK unit tests
+        run: node scripts/test-sdk.mjs
+
+      - name: Check SDK compatibility of every plugin
+        run: node scripts/check-plugin-sdk.mjs
 
       - name: Build plugin
         run: node scripts/build-plugin.mjs "plugins/${{ steps.resolve.outputs.plugin }}"

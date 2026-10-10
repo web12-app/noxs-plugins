@@ -6,6 +6,9 @@
   "type": "module",
   "scripts": {
     "validate": "node scripts/validate-plugin.mjs",
+    "validate:sdk": "node scripts/validate-sdk.mjs",
+    "test:sdk": "node scripts/test-sdk.mjs",
+    "check:sdk": "node scripts/check-plugin-sdk.mjs",
     "build": "node scripts/build-plugin.mjs",
     "build:all": "node scripts/build-plugin.mjs --all",
     "registry": "node scripts/update-registry.mjs"

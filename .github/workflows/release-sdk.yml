@@ -1,0 +1,136 @@
+# Noxs Plugin SDK release workflow.
+#
+# Trigger: a tag shaped sdk-v<version> (example: sdk-v0.0.2) or manual
+# dispatch. Pipeline: validate manifest -> run SDK unit tests -> verify all
+# plugins still resolve against the SDK set -> package the immutable
+# release -> GitHub Release -> pin artifact + sha256 in sdk/registry.json.
+#
+# Published SDK versions are IMMUTABLE: update-sdk-registry.mjs refuses to
+# move the artifact or change the checksum of an already-published release,
+# so a tag can never silently rewrite what plugins already run.
+name: release-sdk
+
+on:
+  push:
+    tags:
+      - 'sdk-v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'SDK version to release (example: 0.0.2 — the sdk/<version>/ directory must exist)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve SDK version
+        id: resolve
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+            VERSION="${TAG#sdk-v}"
+          fi
+          if ! printf '%s' "$VERSION" | grep -qE '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'; then
+            echo "Invalid SDK version: $VERSION" >&2
+            exit 1
+          fi
+          if [ ! -f "sdk/$VERSION/sdk.json" ]; then
+            echo "Unknown SDK release directory: sdk/$VERSION" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=sdk-v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate the SDK release
+        run: node scripts/validate-sdk.mjs "sdk/${{ steps.resolve.outputs.version }}"
+
+      - name: Run SDK unit tests
+        run: node scripts/test-sdk.mjs "sdk/${{ steps.resolve.outputs.version }}"
+
+      - name: Verify every plugin still resolves against the SDK set
+        run: node scripts/check-plugin-sdk.mjs
+
+      - name: Package the immutable .noxs-sdk artifact
+        id: package
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.resolve.outputs.version }}"
+          NAME="noxs-sdk-$VERSION.noxs-sdk"
+          # A .noxs-sdk is a gzipped tar of the release files (sdk.json,
+          # index.js, types.d.ts) — the same safe archive format as plugins.
+          tar -czf "$NAME" -C "sdk/$VERSION" sdk.json index.js types.d.ts
+          sha256sum "$NAME" | awk '{print $1}' > "$NAME.sha256"
+          echo "artifact=$NAME" >> "$GITHUB_OUTPUT"
+          echo "checksum=$(cat "$NAME.sha256")" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release (immutable)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.resolve.outputs.version }}"
+          NAME="${{ steps.package.outputs.artifact }}"
+          if [ -z "$NAME" ] || [ ! -f "$NAME" ]; then
+            echo "Release artifact missing: '$NAME'" >&2
+            exit 1
+          fi
+          {
+            printf 'Noxs Plugin SDK release: **%s** (immutable).\n\n' "$VERSION"
+            printf 'Assets: `%s` (`%s.sha256`).\n\n' "$NAME" "$NAME"
+            printf 'The Noxs app downloads and SHA-256-verifies this artifact before a plugin runs.\n'
+            printf 'Existing plugin releases keep resolving against this version.\n'
+          } > release-notes.md
+          gh release create "${{ steps.resolve.outputs.tag }}" \
+            --title "Noxs Plugin SDK v$VERSION" \
+            --notes-file release-notes.md \
+            "$NAME" "$NAME.sha256" \
+            "sdk/$VERSION/sdk.json" "sdk/$VERSION/index.js" "sdk/$VERSION/types.d.ts"
+
+      - name: Pin artifact + checksum in sdk/registry.json
+        run: |
+          node scripts/update-sdk-registry.mjs \
+            --sdk "${{ steps.resolve.outputs.version }}" \
+            --artifact "https://github.com/web12-app/noxs-plugins/releases/download/${{ steps.resolve.outputs.tag }}/${{ steps.package.outputs.artifact }}" \
+            --checksum "${{ steps.package.outputs.checksum }}" \
+            --tag "${{ steps.resolve.outputs.tag }}"
+
+      - name: Commit registry
+        run: |
+          set -euo pipefail
+          git config user.name "noxs-release-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add sdk/registry.json
+          if git diff --cached --quiet; then
+            echo "SDK registry already up to date"
+          else
+            git commit -m "sdk-registry: noxs-plugin-sdk v${{ steps.resolve.outputs.version }}"
+            # The registry always lands on main (never on the tag ref — a tag
+            # cannot move). A rejected push is retried once against main.
+            git push origin HEAD:main \
+              || (git fetch origin main && git rebase origin/main && git push origin HEAD:main)
+          fi
+
+      - name: Verify published plugins still resolve
+        run: node scripts/check-plugin-sdk.mjs
+
+      - name: Release summary
+        run: |
+          echo "Released Noxs Plugin SDK v${{ steps.resolve.outputs.version }}"
+          echo "Artifact: ${{ steps.package.outputs.artifact }} (sha256 ${{ steps.package.outputs.checksum }})"

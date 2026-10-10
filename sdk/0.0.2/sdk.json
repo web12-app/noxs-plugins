@@ -1,0 +1,14 @@
+{
+  "name": "noxs-plugin-sdk",
+  "version": "0.0.2",
+  "apiVersion": "1",
+  "entry": "index.js",
+  "types": "types.d.ts",
+  "status": "stable",
+  "features": [
+    "logging",
+    "ui",
+    "terminal",
+    "storage"
+  ]
+}

@@ -64,6 +64,13 @@ function toEntry(meta, repoRelative) {
     if (meta.repository) entry.repository = meta.repository;
     if (meta.commands) entry.commands = [...meta.commands];
     if (meta.minimumNoxsVersion) entry.minimumNoxsVersion = meta.minimumNoxsVersion;
+    // Noxs Plugin SDK requirements (spec §4). A legacy manifest without SDK
+    // fields stays without them in the registry — the app resolves it to
+    // the initial stable SDK "0.0.1".
+    if (meta.sdkVersion) entry.sdkVersion = meta.sdkVersion;
+    if (meta.minimumSdkVersion) entry.minimumSdkVersion = meta.minimumSdkVersion;
+    if (meta.maximumSdkVersion) entry.maximumSdkVersion = meta.maximumSdkVersion;
+    if (meta.apiFeatures) entry.apiFeatures = [...meta.apiFeatures];
     return entry;
 }
 
