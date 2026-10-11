@@ -4,13 +4,13 @@
     {
       "id": "code",
       "name": "Code",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "description": "Open and edit files from any path with the Spck Editor CLI",
       "logo": "icon.svg",
       "readme": "README.md",
       "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/code/icon.svg",
       "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/code/README.md",
-      "release": "1.0.1",
+      "release": "1.0.2",
       "permissions": [
         "ui",
         "terminal",
@@ -32,7 +32,7 @@
       "commands": [
         "code"
       ],
-      "minimumNoxsVersion": "0.12.0",
+      "minimumNoxsVersion": "0.11.0",
       "sdkVersion": "0.0.1",
       "minimumSdkVersion": "0.0.1",
       "apiFeatures": [
@@ -40,10 +40,10 @@
         "ui",
         "terminal"
       ],
-      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/code-v1.0.1/code-1.0.1.noxs-plugin",
-      "checksum": "6922e65f648d882441830daf204702022f7cc054e79ca704f3d47e0510ef2acf",
-      "updatedAt": "2026-10-10T11:06:03.352Z",
-      "releaseTag": "code-v1.0.1"
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/code-v1.0.2/code-1.0.2.noxs-plugin",
+      "checksum": "39d4d8f0fa15aa71b4e82b8aefc409e76b2bee1242c64692d4cba925f46401ab",
+      "updatedAt": "2026-10-11T03:10:57.392Z",
+      "releaseTag": "code-v1.0.2"
     },
     {
       "id": "dirscan-lite",
