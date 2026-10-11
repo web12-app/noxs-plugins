@@ -220,13 +220,13 @@
     {
       "id": "payload-lab",
       "name": "Payload Lab",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "description": "Offline encode/decode/hash workbench: base64, hex, URL, SHA-2 and JWT inspection",
       "logo": "icon.svg",
       "readme": "README.md",
       "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/payload-lab/icon.svg",
       "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/payload-lab/README.md",
-      "release": "0.1.0",
+      "release": "0.1.1",
       "permissions": [
         "ui",
         "terminal"
@@ -249,18 +249,18 @@
       "commands": [
         "payload-lab"
       ],
-      "minimumNoxsVersion": "0.12.0",
-      "sdkVersion": "0.0.2",
+      "minimumNoxsVersion": "0.11.0",
+      "sdkVersion": "0.0.1",
       "minimumSdkVersion": "0.0.1",
       "apiFeatures": [
         "logging",
         "ui",
         "terminal"
       ],
-      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/payload-lab-v0.1.0/payload-lab-0.1.0.noxs-plugin",
-      "checksum": "79cfcc35af97793db8ad4e91e8fa3b84263391661b7bba4a8fea292e711c2afc",
-      "updatedAt": "2026-10-10T18:58:15.552Z",
-      "releaseTag": "payload-lab-v0.1.0"
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/payload-lab-v0.1.1/payload-lab-0.1.1.noxs-plugin",
+      "checksum": "e35efaff5d2bd8e498aa87b6e134737eddb442bd1783d6b8f1be8719e7f113bd",
+      "updatedAt": "2026-10-11T03:11:00.481Z",
+      "releaseTag": "payload-lab-v0.1.1"
     },
     {
       "id": "port-probe",
