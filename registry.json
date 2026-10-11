@@ -437,13 +437,13 @@
     {
       "id": "whois-lookup",
       "name": "Whois Lookup",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "description": "Registrar, dates, nameservers and status flags from whois records",
       "logo": "icon.svg",
       "readme": "README.md",
       "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/whois-lookup/icon.svg",
       "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/whois-lookup/README.md",
-      "release": "0.1.0",
+      "release": "0.1.1",
       "permissions": [
         "ui",
         "terminal"
@@ -465,18 +465,18 @@
       "commands": [
         "whois-lookup"
       ],
-      "minimumNoxsVersion": "0.12.0",
-      "sdkVersion": "0.0.2",
+      "minimumNoxsVersion": "0.11.0",
+      "sdkVersion": "0.0.1",
       "minimumSdkVersion": "0.0.1",
       "apiFeatures": [
         "logging",
         "ui",
         "terminal"
       ],
-      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/whois-lookup-v0.1.0/whois-lookup-0.1.0.noxs-plugin",
-      "checksum": "5dc12b8e62275f7f86143d3fd569d477a08d73175b7f3d2a801b95ed740b527c",
-      "updatedAt": "2026-10-10T18:57:39.813Z",
-      "releaseTag": "whois-lookup-v0.1.0"
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/whois-lookup-v0.1.1/whois-lookup-0.1.1.noxs-plugin",
+      "checksum": "7f30ef88bbbec90b7f01319c627bd07f960dde187c5871dceb70ea8418bc8b8c",
+      "updatedAt": "2026-10-11T03:11:06.317Z",
+      "releaseTag": "whois-lookup-v0.1.1"
     },
     {
       "id": "wp-scanner",
