@@ -1,7 +1,7 @@
 {
   "id": "code",
   "name": "Code",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Open and edit files from any path with the Spck Editor CLI",
   "logo": "icon.svg",
   "readme": "README.md",
@@ -14,7 +14,7 @@
   "commands": [
     "code"
   ],
-  "minimumNoxsVersion": "0.12.0",
+  "minimumNoxsVersion": "0.11.0",
   "sdkVersion": "0.0.1",
   "minimumSdkVersion": "0.0.1",
   "apiFeatures": [

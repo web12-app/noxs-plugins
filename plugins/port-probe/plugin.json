@@ -1,7 +1,7 @@
 {
   "id": "port-probe",
   "name": "Port Probe",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Gentle sequential TCP port checks with delays for authorized network audits",
   "logo": "icon.svg",
   "readme": "README.md",
@@ -13,8 +13,8 @@
   "commands": [
     "port-probe"
   ],
-  "minimumNoxsVersion": "0.12.0",
-  "sdkVersion": "0.0.2",
+  "minimumNoxsVersion": "0.11.0",
+  "sdkVersion": "0.0.1",
   "minimumSdkVersion": "0.0.1",
   "apiFeatures": [
     "logging",
