@@ -265,13 +265,13 @@
     {
       "id": "port-probe",
       "name": "Port Probe",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "description": "Gentle sequential TCP port checks with delays for authorized network audits",
       "logo": "icon.svg",
       "readme": "README.md",
       "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/port-probe/icon.svg",
       "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/port-probe/README.md",
-      "release": "0.1.0",
+      "release": "0.1.1",
       "permissions": [
         "ui",
         "terminal"
@@ -294,18 +294,18 @@
       "commands": [
         "port-probe"
       ],
-      "minimumNoxsVersion": "0.12.0",
-      "sdkVersion": "0.0.2",
+      "minimumNoxsVersion": "0.11.0",
+      "sdkVersion": "0.0.1",
       "minimumSdkVersion": "0.0.1",
       "apiFeatures": [
         "logging",
         "ui",
         "terminal"
       ],
-      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/port-probe-v0.1.0/port-probe-0.1.0.noxs-plugin",
-      "checksum": "3e48b6110126b515f044390b99788090c05b0c45d80cee874bc73801478c8024",
-      "updatedAt": "2026-10-10T19:00:25.806Z",
-      "releaseTag": "port-probe-v0.1.0"
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/port-probe-v0.1.1/port-probe-0.1.1.noxs-plugin",
+      "checksum": "16c0cc0f3dd78bbc933f7189edd783ce98f241c7ff8bea7a3bbd73406b2d5963",
+      "updatedAt": "2026-10-11T03:11:08.235Z",
+      "releaseTag": "port-probe-v0.1.1"
     },
     {
       "id": "recon-scope",
