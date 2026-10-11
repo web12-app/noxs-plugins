@@ -48,13 +48,13 @@
     {
       "id": "dirscan-lite",
       "name": "DirScan Lite",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "description": "Slow, polite directory and file discovery for websites you own or have permission to test",
       "logo": "icon.svg",
       "readme": "README.md",
       "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/dirscan-lite/icon.svg",
       "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/dirscan-lite/README.md",
-      "release": "0.1.0",
+      "release": "0.1.1",
       "permissions": [
         "ui",
         "terminal"
@@ -76,18 +76,18 @@
       "commands": [
         "dirscan-lite"
       ],
-      "minimumNoxsVersion": "0.12.0",
-      "sdkVersion": "0.0.2",
+      "minimumNoxsVersion": "0.11.0",
+      "sdkVersion": "0.0.1",
       "minimumSdkVersion": "0.0.1",
       "apiFeatures": [
         "logging",
         "ui",
         "terminal"
       ],
-      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/dirscan-lite-v0.1.0/dirscan-lite-0.1.0.noxs-plugin",
-      "checksum": "29d807f857365a005857983902b7beda1ecb3b21c748db26a2f30be23c78637f",
-      "updatedAt": "2026-10-10T18:57:03.924Z",
-      "releaseTag": "dirscan-lite-v0.1.0"
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/dirscan-lite-v0.1.1/dirscan-lite-0.1.1.noxs-plugin",
+      "checksum": "cf2ba9e04367db35685167135ac9fd7b48dc1a394e1e249e08b96e50ca669c48",
+      "updatedAt": "2026-10-11T03:10:45.014Z",
+      "releaseTag": "dirscan-lite-v0.1.1"
     },
     {
       "id": "header-auditor",
