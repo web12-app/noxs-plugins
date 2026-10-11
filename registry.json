@@ -310,13 +310,13 @@
     {
       "id": "recon-scope",
       "name": "Recon Scope",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "description": "Passive-first DNS, whois and HTTP recon for hosts you are authorized to assess",
       "logo": "icon.svg",
       "readme": "README.md",
       "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/recon-scope/icon.svg",
       "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/recon-scope/README.md",
-      "release": "0.1.0",
+      "release": "0.1.1",
       "permissions": [
         "ui",
         "terminal"
@@ -339,18 +339,18 @@
       "commands": [
         "recon-scope"
       ],
-      "minimumNoxsVersion": "0.12.0",
-      "sdkVersion": "0.0.2",
+      "minimumNoxsVersion": "0.11.0",
+      "sdkVersion": "0.0.1",
       "minimumSdkVersion": "0.0.1",
       "apiFeatures": [
         "logging",
         "ui",
         "terminal"
       ],
-      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/recon-scope-v0.1.0/recon-scope-0.1.0.noxs-plugin",
-      "checksum": "7e3557ae58b64bd1d93574289d6101dbbb17c27e2330d5428df833d3f38c905b",
-      "updatedAt": "2026-10-10T18:49:20.541Z",
-      "releaseTag": "recon-scope-v0.1.0"
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/recon-scope-v0.1.1/recon-scope-0.1.1.noxs-plugin",
+      "checksum": "6dd3f2cf6cde5db2d108a77ecfa37b007858f02fe325ee8f79333f90528539ef",
+      "updatedAt": "2026-10-11T03:10:49.343Z",
+      "releaseTag": "recon-scope-v0.1.1"
     },
     {
       "id": "sdk-demo",
