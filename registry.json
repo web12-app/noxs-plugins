@@ -48,13 +48,13 @@
     {
       "id": "curl-tube",
       "name": "Curl Tube",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "description": "Terminal client for your file cloud: login, list, push (resumable chunked uploads), pull, share and delete via curl",
       "logo": "icon.svg",
       "readme": "README.md",
       "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/curl-tube/icon.svg",
       "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/curl-tube/README.md",
-      "release": "0.1.0",
+      "release": "0.1.1",
       "permissions": [
         "ui",
         "terminal"
@@ -86,10 +86,10 @@
         "ui",
         "terminal"
       ],
-      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/curl-tube-v0.1.0/curl-tube-0.1.0.noxs-plugin",
-      "checksum": "bd9a2d603f0a682a37660443380a04594ce91d1ecf253b4bffa3974f3e672cb1",
-      "updatedAt": "2026-10-12T14:07:38.846Z",
-      "releaseTag": "curl-tube-v0.1.0"
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/curl-tube-v0.1.1/curl-tube-0.1.1.noxs-plugin",
+      "checksum": "f23b1e4711e4158b23f67aff500a7c2d18f931ccf82213b6a59056b7d7d8340f",
+      "updatedAt": "2026-10-12T14:18:53.140Z",
+      "releaseTag": "curl-tube-v0.1.1"
     },
     {
       "id": "dirscan-lite",
