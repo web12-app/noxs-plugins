@@ -1,0 +1,40 @@
+{
+  "id": "curl-tube",
+  "name": "Curl Tube",
+  "version": "0.1.0",
+  "description": "Terminal client for your file cloud: login, list, push (resumable chunked uploads), pull, share and delete via curl",
+  "logo": "icon.svg",
+  "readme": "README.md",
+  "main": "plugin.js",
+  "permissions": [
+    "ui",
+    "terminal"
+  ],
+  "commands": [
+    "curl-tube"
+  ],
+  "minimumNoxsVersion": "0.11.0",
+  "sdkVersion": "0.0.1",
+  "minimumSdkVersion": "0.0.1",
+  "apiFeatures": [
+    "logging",
+    "ui",
+    "terminal"
+  ],
+  "author": "CrossberryWeb",
+  "license": "MIT",
+  "category": "Developer Tools",
+  "keywords": [
+    "curl",
+    "upload",
+    "download",
+    "cloud",
+    "files",
+    "api",
+    "share",
+    "resumable",
+    "developer tools"
+  ],
+  "homepage": "https://github.com/web12-app/noxs-plugins",
+  "repository": "https://github.com/web12-app/noxs-plugins"
+}
