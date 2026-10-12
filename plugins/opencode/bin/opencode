@@ -1,0 +1,523 @@
+#!/bin/sh
+# Noxs OpenCode plugin — the open source AI coding agent in your shell and
+# browser. Part of the Noxs Plugin Store (https://github.com/web12-app/noxs-plugins).
+#
+# Usage: opencode [command]
+#   opencode                     chat in the terminal (OpenCode TUI)
+#   opencode web [--port N]      serve the web chat UI and auto-open it in
+#                                the Noxs floating browser (via `nx ow`)
+#   opencode web --stop          stop the background web server
+#   opencode setup               install or update the OpenCode CLI
+#   opencode status              installation, server and provider status
+#   opencode free <preset> [key] free-mode provider preset:
+#                                  openrouter | groq | gemini
+#                                (key optional; prompted in the terminal)
+#   opencode provider-add <id> <baseURL> <model> [name] [key]
+#                                add any OpenAI-compatible provider
+#   opencode provider-list       show configured Noxs providers
+#   opencode provider-remove <id>
+#   opencode doctor              environment diagnostics
+#   opencode <anything else>     forwarded to the real OpenCode CLI
+#                                (run, serve, auth, models, upgrade, ...)
+#
+# Free-mode presets and custom providers are written to a dedicated config
+# (~/.config/opencode/noxs-providers.json) that OpenCode merges with your
+# own config via OPENCODE_CONFIG — this command never touches
+# opencode.json, so your settings stay yours.
+
+set -eu
+
+PROG=opencode
+OC_HOME="${OPENCODE_HOME:-$HOME/.opencode}"
+REAL_BIN="$OC_HOME/bin/opencode"
+NPM_PREFIX="$HOME/.opencode-npm"
+CFG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
+CFG_FILE="$CFG_DIR/noxs-providers.json"
+SNIP_DIR="$CFG_DIR/noxs-providers.d"
+MODEL_FILE="$CFG_DIR/noxs-model"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/noxs-opencode"
+PID_FILE="$CACHE_DIR/web.pid"
+LOG_FILE="$CACHE_DIR/web.log"
+WEB_HOST="${NX_WEB_HOST:-/var/run/noxs/host/web}"
+DEFAULT_PORT=4096
+SCHEMA='https://opencode.ai/config.json'
+
+nx_err() { printf '%s: %s\n' "$PROG" "$*" >&2; }
+nx_say() { printf '%s: %s\n' "$PROG" "$*"; }
+
+usage() {
+    sed -n '4,29p' "$0" | sed 's/^# \{0,1\}//'
+}
+
+# ------------------------------------------------------------ json safety
+# Values are embedded into JSON without an escaping engine, so every user
+# supplied field is rejected unless it is JSON-safe by construction:
+# no quotes, no backslash, no control characters, no whitespace.
+json_safe() {
+    case "$1" in
+        ""|*[\"\\]*) return 1 ;;
+        *[[:space:]]*|[[:cntrl:]]*|*[[:cntrl:]]*) return 1 ;;
+    esac
+    return 0
+}
+
+require_safe() {  # require_safe <label> <value>
+    if ! json_safe "$2"; then
+        nx_err "$1 contains quotes, backslashes, spaces or control characters"
+        exit 2
+    fi
+}
+
+# Display names may contain spaces — only JSON-hostile characters are
+# refused (quotes, backslashes, control characters).
+require_text() {  # require_text <value>
+    case "$1" in
+        *["\\"]*) return 1 ;;
+        *[[:cntrl:]]*) return 1 ;;
+    esac
+    return 0
+}
+
+# ------------------------------------------------------------ config store
+write_snippet() {  # write_snippet <id> <npm-pkg> <name> <baseURL-or-'-'> <key-or-'-'> <models-fragment>
+    _id=$1; _pkg=$2; _name=$3; _url=$4; _key=$5; _models=$6
+    mkdir -p "$SNIP_DIR"
+    chmod 700 "$SNIP_DIR" 2>/dev/null || true
+    _opt="{\"baseURL\":\"$_url\"}"
+    [ "$_url" = "-" ] && _opt='{}'
+    if [ "$_key" != "-" ]; then
+        case "$_opt" in
+            '{}') _opt="{\"apiKey\":\"$_key\"}" ;;
+            *)    _opt="{\"baseURL\":\"$_url\",\"apiKey\":\"$_key\"}" ;;
+        esac
+    fi
+    printf '{"npm":"%s","name":"%s","options":%s,"models":%s}\n' \
+        "$_pkg" "$_name" "$_opt" "$_models" > "$SNIP_DIR/$_id.json"
+    chmod 600 "$SNIP_DIR/$_id.json" 2>/dev/null || true
+}
+
+regenerate() {
+    mkdir -p "$CFG_DIR"
+    _model=''
+    if [ -f "$MODEL_FILE" ]; then
+        _model=$(cat "$MODEL_FILE" 2>/dev/null || true)
+        case "$_model" in
+            */*) : ;;
+            *) _model='' ;;
+        esac
+    fi
+    {
+        printf '{"$schema":"%s"' "$SCHEMA"
+        [ -n "$_model" ] && printf ',"model":"%s"' "$_model"
+        printf ',"provider":{'
+        _first=1
+        for _f in "$SNIP_DIR"/*.json; do
+            [ -f "$_f" ] || continue
+            [ "$_first" = 1 ] || printf ','
+            _first=0
+            printf '"%s":%s' "$(basename "$_f" .json)" "$(cat "$_f")"
+        done
+        printf '}}\n'
+    } > "$CFG_FILE.tmp"
+    mv "$CFG_FILE.tmp" "$CFG_FILE"
+    chmod 600 "$CFG_FILE" 2>/dev/null || true
+}
+
+# Export OPENCODE_CONFIG for real OpenCode invocations when the plugin
+# config exists (OpenCode merges it — it never replaces your own config).
+with_config() {
+    if [ -f "$CFG_FILE" ]; then
+        OPENCODE_CONFIG="$CFG_FILE"
+        export OPENCODE_CONFIG
+    fi
+}
+
+# ------------------------------------------------------------ installation
+fetch() {  # fetch <url> -> stdout
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsSL "$1"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -qO- "$1"
+    else
+        return 1
+    fi
+}
+
+ensure_curl() {
+    command -v curl >/dev/null 2>&1 && return 0
+    command -v wget >/dev/null 2>&1 && return 0
+    nx_say "curl/wget missing — installing curl via apt"
+    if [ "$(id -u)" = 0 ]; then
+        apt-get update -qq && apt-get install -y -qq curl
+    else
+        sudo apt-get update -qq && sudo apt-get install -y -qq curl
+    fi
+}
+
+setup_cmd() {
+    nx_say "installing OpenCode CLI (https://github.com/anomalyco/opencode)"
+    ensure_curl
+    fetch https://opencode.ai/install | bash
+    if [ -x "$REAL_BIN" ]; then
+        nx_say "installed: $REAL_BIN"
+        "$REAL_BIN" --version 2>/dev/null || true
+    elif [ -x "$NPM_PREFIX/bin/opencode" ]; then
+        nx_say "installed: $NPM_PREFIX/bin/opencode"
+    else
+        nx_err "installer finished but the binary was not found — try: opencode setup"
+        exit 1
+    fi
+}
+
+find_real_bin() {
+    if [ -x "$REAL_BIN" ]; then
+        printf '%s\n' "$REAL_BIN"
+        return 0
+    fi
+    if [ -x "$NPM_PREFIX/bin/opencode" ]; then
+        printf '%s\n' "$NPM_PREFIX/bin/opencode"
+        return 0
+    fi
+    _found=$(command -v opencode 2>/dev/null || true)
+    [ -n "$_found" ] || return 1
+    case "$_found" in
+        /usr/local/bin/opencode) return 1 ;;   # that is this shim
+        *) printf '%s\n' "$_found" ;;
+    esac
+}
+
+# ------------------------------------------------------------ web server
+http_get() {  # http_get <url> -> exit 0 when reachable
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsS --max-time 2 "$1" >/dev/null 2>&1
+    elif command -v wget >/dev/null 2>&1; then
+        wget -qO- -T 2 "$1" >/dev/null 2>&1
+    else
+        return 1
+    fi
+}
+
+open_in_noxs() {  # open_in_noxs <url>
+    if [ -d "$WEB_HOST/requests" ] && command -v nx >/dev/null 2>&1; then
+        nx ow "$1" && return 0
+    fi
+    nx_say "open this address in your browser: $1"
+}
+
+server_running() {  # sets RUN_PID RUN_PORT
+    RUN_PID=''; RUN_PORT=''
+    [ -f "$PID_FILE" ] || return 1
+    RUN_PID=$(sed -n '1p' "$PID_FILE" 2>/dev/null || true)
+    RUN_PORT=$(sed -n '2p' "$PID_FILE" 2>/dev/null || true)
+    case "$RUN_PID" in ''|*[!0-9]*) return 1 ;; esac
+    case "$RUN_PORT" in ''|*[!0-9]*) return 1 ;; esac
+    kill -0 "$RUN_PID" 2>/dev/null || return 1
+    return 0
+}
+
+web_cmd() {
+    if [ "${1:-}" = "--stop" ]; then
+        if server_running; then
+            kill "$RUN_PID" 2>/dev/null || true
+            rm -f "$PID_FILE"
+            nx_say "web server stopped (port $RUN_PORT)"
+        else
+            rm -f "$PID_FILE"
+            nx_say "web server is not running"
+        fi
+        return 0
+    fi
+
+    _port=$DEFAULT_PORT
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            --port)
+                [ $# -ge 2 ] || { nx_err '--port needs a number'; exit 2; }
+                case "$2" in *[!0-9]*|'') nx_err "bad port: $2"; exit 2 ;; esac
+                _port=$2; shift ;;
+            --hostname) shift ;;            # local-only by design (see README)
+            -h|--help) usage; exit 0 ;;
+            *) nx_err "unknown web option: $1 (see: opencode web --help)"; exit 2 ;;
+        esac
+        shift
+    done
+
+    if ! _bin=$(find_real_bin); then
+        nx_say "OpenCode is not installed yet — running setup first"
+        setup_cmd
+        _bin=$(find_real_bin) || { nx_err "installation failed"; exit 1; }
+    fi
+
+    # Already serving? Reuse it.
+    if server_running && http_get "http://127.0.0.1:$RUN_PORT/global/health"; then
+        nx_say "web UI already running on port $RUN_PORT — opening it"
+        open_in_noxs "http://127.0.0.1:$RUN_PORT"
+        return 0
+    fi
+
+    # Find a free port: skip ports that already answer HTTP.
+    _try=0
+    while [ "$_try" -lt 16 ]; do
+        _p=$((_port + _try))
+        if http_get "http://127.0.0.1:$_p/global/health"; then
+            nx_say "port $_p already serves an OpenCode web UI — reusing it"
+            printf '0\n%s\n' "$_p" > "$PID_FILE"
+            open_in_noxs "http://127.0.0.1:$_p"
+            return 0
+        fi
+        if ! http_get "http://127.0.0.1:$_p" 2>/dev/null; then
+            _port=$_p
+            break
+        fi
+        _try=$((_try + 1))
+    done
+
+    mkdir -p "$CACHE_DIR"
+    with_config
+    nx_say "starting OpenCode web UI on http://127.0.0.1:$_port (log: $LOG_FILE)"
+    # BROWSER=/bin/true: this guest has no desktop browser — the plugin
+    # opens the UI itself through `nx ow` (Noxs floating browser).
+    BROWSER=/bin/true nohup "$_bin" web --port "$_port" --hostname 127.0.0.1 \
+        >>"$LOG_FILE" 2>&1 &
+    _pid=$!
+    printf '%s\n%s\n' "$_pid" "$_port" > "$PID_FILE"
+
+    _wait=0
+    while [ "$_wait" -lt 40 ]; do
+        if http_get "http://127.0.0.1:$_port/global/health"; then break; fi
+        kill -0 "$_pid" 2>/dev/null || {
+            nx_err "web server exited early — last log lines:"
+            tail -5 "$LOG_FILE" 2>/dev/null || true
+            rm -f "$PID_FILE"
+            exit 1
+        }
+        _wait=$((_wait + 1))
+        sleep 1
+    done
+
+    if http_get "http://127.0.0.1:$_port/global/health"; then
+        nx_say "web UI is up (pid $_pid)"
+        open_in_noxs "http://127.0.0.1:$_port"
+    else
+        nx_err "server did not answer within 40s — check: tail $LOG_FILE"
+        exit 1
+    fi
+}
+
+# ------------------------------------------------------------ providers
+provider_add() {  # provider_add <id> <baseURL> <model> [name] [key]
+    [ $# -ge 3 ] || {
+        printf 'Usage: %s provider-add <id> <baseURL> <model> [name] [apiKey]\n' "$PROG" >&2
+        printf '  %s provider-add myapi https://api.example.com/v1 my-model "My API" sk-xxx\n' "$PROG" >&2
+        exit 2
+    }
+    _id=$1; _url=$2; _model=$3; _name=${4:-}; _key=${5:-}
+    case "$_id" in
+        *[!a-z0-9-]*|'') nx_err "provider id: lowercase letters, digits and dashes only"; exit 2 ;;
+    esac
+    case "$_url" in
+        https://*|http://*) ;;
+        *) nx_err "baseURL must start with http:// or https://"; exit 2 ;;
+    esac
+    require_safe "baseURL" "$_url"
+    require_safe "model" "$_model"
+    _key_arg='-'
+    if [ -n "$_key" ]; then
+        require_safe "apiKey" "$_key"
+        _key_arg=$_key
+    fi
+    if [ -z "$_name" ]; then
+        _name=$_id
+    else
+        require_text "$_name" || { nx_err "name contains quotes, backslashes or control characters"; exit 2; }
+    fi
+
+    if [ -z "$_key" ] && [ -t 0 ]; then
+        printf 'API key for %s (Enter to skip and use auth later): ' "$_name"
+        IFS= read -r _key || true
+        [ -n "$_key" ] && { require_safe "apiKey" "$_key"; _key_arg=$_key; }
+    fi
+
+    _models=$(printf '{"%s":{"name":"%s"}}' "$_model" "$_model")
+    write_snippet "$_id" '@ai-sdk/openai-compatible' "$_name" "$_url" "$_key_arg" "$_models"
+    printf '%s/%s\n' "$_id" "$_model" > "$MODEL_FILE"
+    chmod 600 "$MODEL_FILE" 2>/dev/null || true
+    regenerate
+    nx_say "provider '$_id' added — default model $_id/$_model"
+    nx_say "config: $CFG_FILE (merged via OPENCODE_CONFIG, your own config is untouched)"
+    [ -n "$_key" ] || nx_say "no API key stored — set one with: opencode provider-add $_id $_url $_model $_name <key>"
+}
+
+FREE_ID=''; FREE_NPM=''; FREE_URL='-'; FREE_MODEL=''; FREE_MODELS=''
+
+free_preset() {  # free_preset <openrouter|groq|gemini>
+    case "$1" in
+        openrouter)
+            FREE_ID=noxs-openrouter; FREE_NPM='@ai-sdk/openai-compatible'
+            FREE_URL='https://openrouter.ai/api/v1'
+            FREE_MODEL='deepseek/deepseek-chat-v3.1:free'
+            FREE_MODELS='{"deepseek/deepseek-chat-v3.1:free":{"name":"DeepSeek V3.1 (free)"},"qwen/qwen3-coder:free":{"name":"Qwen3 Coder (free)"},"moonshotai/kimi-k2:free":{"name":"Kimi K2 (free)"},"z-ai/glm-4.5-air:free":{"name":"GLM 4.5 Air (free)"},"meta-llama/llama-3.3-70b-instruct:free":{"name":"Llama 3.3 70B (free)"}}'
+            ;;
+        groq)
+            FREE_ID=noxs-groq; FREE_NPM='@ai-sdk/openai-compatible'
+            FREE_URL='https://api.groq.com/openai/v1'
+            FREE_MODEL='llama-3.3-70b-versatile'
+            FREE_MODELS='{"llama-3.3-70b-versatile":{"name":"Llama 3.3 70B"},"moonshotai/kimi-k2-instruct":{"name":"Kimi K2"},"qwen/qwen3-32b":{"name":"Qwen3 32B"}}'
+            ;;
+        gemini)
+            FREE_ID=noxs-gemini; FREE_NPM='@ai-sdk/google'
+            FREE_URL='-'
+            FREE_MODEL='gemini-2.0-flash'
+            FREE_MODELS='{"gemini-2.0-flash":{"name":"Gemini 2.0 Flash"},"gemini-2.5-flash":{"name":"Gemini 2.5 Flash"}}'
+            ;;
+        *)
+            nx_err "unknown preset: $1 (openrouter | groq | gemini)"
+            exit 2
+            ;;
+    esac
+}
+
+free_cmd() {  # free_cmd <preset> [key]
+    [ $# -ge 1 ] || {
+        printf 'Usage: %s free <openrouter|groq|gemini> [apiKey]\n' "$PROG"
+        printf '\nFree tiers (you create the key):\n'
+        printf '  openrouter  https://openrouter.ai/keys  free models tagged :free\n'
+        printf '  groq        https://console.groq.com/keys  generous free API tier\n'
+        printf '  gemini      https://aistudio.google.com/apikey  free Gemini API tier\n'
+        exit 2
+    }
+    free_preset "$1"
+    _key=${2:-}
+    if [ -z "$_key" ] && [ -t 0 ]; then
+        printf 'API key for %s (Enter to skip): ' "$FREE_ID"
+        IFS= read -r _key || true
+    fi
+    _key_arg='-'
+    if [ -n "$_key" ]; then
+        require_safe "apiKey" "$_key"
+        _key_arg=$_key
+    fi
+    write_snippet "$FREE_ID" "$FREE_NPM" "Free $1" "$FREE_URL" "$_key_arg" "$FREE_MODELS"
+    printf '%s/%s\n' "$FREE_ID" "$FREE_MODEL" > "$MODEL_FILE"
+    chmod 600 "$MODEL_FILE" 2>/dev/null || true
+    regenerate
+    nx_say "free preset '$1' configured — default model $FREE_ID/$FREE_MODEL"
+    [ -n "$_key" ] || nx_say "no key stored yet — run again with your key, e.g.: opencode free $1 <apiKey>"
+    case "$1" in
+        openrouter) nx_say "get a free key: https://openrouter.ai/keys (models tagged :free cost nothing)" ;;
+        groq)       nx_say "get a free key: https://console.groq.com/keys" ;;
+        gemini)     nx_say "get a free key: https://aistudio.google.com/apikey" ;;
+    esac
+}
+
+provider_list() {
+    if [ ! -d "$SNIP_DIR" ] || [ -z "$(ls "$SNIP_DIR" 2>/dev/null || true)" ]; then
+        nx_say "no Noxs-managed providers yet"
+        nx_say "try: opencode free openrouter   |   opencode provider-add ..."
+        return 0
+    fi
+    nx_say "providers in $CFG_FILE:"
+    for _f in "$SNIP_DIR"/*.json; do
+        [ -f "$_f" ] || continue
+        printf '  - %s\n' "$(basename "$_f" .json)"
+    done
+    if [ -f "$MODEL_FILE" ]; then
+        printf '  default model: %s\n' "$(cat "$MODEL_FILE" 2>/dev/null || true)"
+    fi
+}
+
+provider_remove() {
+    [ $# -ge 1 ] || { nx_err "usage: opencode provider-remove <id>"; exit 2; }
+    if [ -f "$SNIP_DIR/$1.json" ]; then
+        rm -f "$SNIP_DIR/$1.json"
+        if [ -f "$MODEL_FILE" ]; then
+            case "$(cat "$MODEL_FILE")" in
+                "$1"/*) rm -f "$MODEL_FILE" ;;
+            esac
+        fi
+        regenerate
+        nx_say "provider '$1' removed"
+    else
+        nx_err "no such provider: $1 (see: opencode provider-list)"
+        exit 2
+    fi
+}
+
+# ------------------------------------------------------------ status/doctor
+status_cmd() {
+    if _bin=$(find_real_bin); then
+        printf 'opencode CLI: %s (%s)\n' "$("$_bin" --version 2>/dev/null || echo 'version ?')" "$_bin"
+    else
+        printf 'opencode CLI: not installed  (fix: opencode setup)\n'
+    fi
+    if server_running && http_get "http://127.0.0.1:$RUN_PORT/global/health"; then
+        printf 'web UI:      running  http://127.0.0.1:%s  (pid %s)\n' "$RUN_PORT" "$RUN_PID"
+    else
+        printf 'web UI:      stopped  (start: opencode web)\n'
+    fi
+    if [ -d "$SNIP_DIR" ] && [ -n "$(ls "$SNIP_DIR" 2>/dev/null || true)" ]; then
+        printf 'providers:   %s\n' "$(ls "$SNIP_DIR" 2>/dev/null | sed 's/\.json$//' | tr '\n' ' ')"
+    else
+        printf 'providers:   none  (try: opencode free openrouter)\n'
+    fi
+    [ -f "$MODEL_FILE" ] && printf 'model:       %s\n' "$(cat "$MODEL_FILE")"
+    if [ -d "$WEB_HOST/requests" ]; then
+        printf 'nx ow:       available (Noxs browser bridge OK)\n'
+    else
+        printf 'nx ow:       unavailable in this shell\n'
+    fi
+}
+
+doctor_cmd() {
+    printf 'environment diagnostics\n'
+    printf '  guest:      %s %s\n' "$(uname -s 2>/dev/null)" "$(uname -m 2>/dev/null)"
+    for t in curl wget tar bash node nx sudo apt-get; do
+        if command -v "$t" >/dev/null 2>&1; then
+            printf '  %-8s  ok\n' "$t"
+        else
+            printf '  %-8s  MISSING\n' "$t"
+        fi
+    done
+    if _bin=$(find_real_bin); then
+        printf '  binary     %s\n' "$_bin"
+    fi
+    [ -d "$WEB_HOST/requests" ] || printf '  note: nx ow bridge not mounted — web UI URL will be printed instead\n'
+    df -h "$HOME" 2>/dev/null | tail -1
+}
+
+# ------------------------------------------------------------ dispatch
+case "${1:-}" in
+    '')
+        if _bin=$(find_real_bin); then
+            with_config
+            exec "$_bin"
+        fi
+        nx_say "OpenCode is not installed yet — starting setup"
+        setup_cmd
+        _bin=$(find_real_bin) || exit 1
+        with_config
+        exec "$_bin"
+        ;;
+    -h|--help|help) usage; exit 0 ;;
+    -V|--version)
+        if _bin=$(find_real_bin); then exec "$_bin" --version; fi
+        nx_say "not installed (plugin wrapper ready)"
+        exit 0
+        ;;
+    setup) shift; setup_cmd "$@" ;;
+    web) shift; web_cmd "$@" ;;
+    status) status_cmd ;;
+    doctor) doctor_cmd ;;
+    free) shift; free_cmd "$@" ;;
+    provider-add) shift; provider_add "$@" ;;
+    provider-list|providers) provider_list ;;
+    provider-remove) shift; provider_remove "$@" ;;
+    *)
+        if _bin=$(find_real_bin); then
+            with_config
+            exec "$_bin" "$@"
+        fi
+        nx_err "OpenCode is not installed yet — run: opencode setup"
+        exit 1
+        ;;
+esac

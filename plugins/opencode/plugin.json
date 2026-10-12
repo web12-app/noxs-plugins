@@ -1,0 +1,40 @@
+{
+  "id": "opencode",
+  "name": "OpenCode Agent",
+  "version": "0.1.0",
+  "description": "The open source AI coding agent: chat in the terminal or browser UI, free models or your own provider",
+  "logo": "icon.svg",
+  "readme": "README.md",
+  "main": "plugin.js",
+  "permissions": [
+    "ui",
+    "terminal",
+    "network"
+  ],
+  "commands": [
+    "opencode"
+  ],
+  "minimumNoxsVersion": "0.11.0",
+  "sdkVersion": "0.0.1",
+  "minimumSdkVersion": "0.0.1",
+  "apiFeatures": [
+    "logging",
+    "ui",
+    "terminal"
+  ],
+  "author": "CrossberryWeb",
+  "license": "MIT",
+  "category": "AI Agents",
+  "keywords": [
+    "opencode",
+    "ai",
+    "agent",
+    "chat",
+    "coding",
+    "llm",
+    "web ui",
+    "ai agents"
+  ],
+  "homepage": "https://github.com/anomalyco/opencode",
+  "repository": "https://github.com/web12-app/noxs-plugins"
+}
