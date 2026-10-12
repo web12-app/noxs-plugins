@@ -1,7 +1,7 @@
 {
   "id": "curl-tube",
   "name": "Curl Tube",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Terminal client for your file cloud: login, list, push (resumable chunked uploads), pull, share and delete via curl",
   "logo": "icon.svg",
   "readme": "README.md",

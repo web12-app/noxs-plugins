@@ -23,7 +23,7 @@
 
 const PLUGIN_ID = 'curl-tube';
 const PLUGIN_NAME = 'Curl Tube';
-const VERSION = '0.1.0';
+const VERSION = '0.1.1';
 const ACCENT = '#38bdf8';
 const BASE = '~/.noxs/' + PLUGIN_ID;
 const REQ = BASE + '/request.txt';
@@ -305,6 +305,7 @@ function apiCall(cfg, method, apiPath, bodyJson) {
     const parts = [
         'curl -q -sS --max-time 25',
         '-b ' + JAR,
+        '-c ' + JAR,  // persist Set-Cookie (login session)
         "-H " + shq('ngrok-skip-browser-warning: 1')
     ];
     if (method !== 'GET') {
