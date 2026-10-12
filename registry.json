@@ -218,6 +218,52 @@
       "releaseTag": "http-repeater-v0.1.1"
     },
     {
+      "id": "opencode",
+      "name": "OpenCode Agent",
+      "version": "0.1.0",
+      "description": "The open source AI coding agent: chat in the terminal or browser UI, free models or your own provider",
+      "logo": "icon.svg",
+      "readme": "README.md",
+      "logoUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/opencode/icon.svg",
+      "readmeUrl": "https://raw.githubusercontent.com/web12-app/noxs-plugins/main/plugins/opencode/README.md",
+      "release": "0.1.0",
+      "permissions": [
+        "ui",
+        "terminal",
+        "network"
+      ],
+      "category": "AI Agents",
+      "author": "CrossberryWeb",
+      "license": "MIT",
+      "keywords": [
+        "opencode",
+        "ai",
+        "agent",
+        "chat",
+        "coding",
+        "llm",
+        "web ui",
+        "ai agents"
+      ],
+      "homepage": "https://github.com/anomalyco/opencode",
+      "repository": "https://github.com/web12-app/noxs-plugins",
+      "commands": [
+        "opencode"
+      ],
+      "minimumNoxsVersion": "0.11.0",
+      "sdkVersion": "0.0.1",
+      "minimumSdkVersion": "0.0.1",
+      "apiFeatures": [
+        "logging",
+        "ui",
+        "terminal"
+      ],
+      "artifact": "https://github.com/web12-app/noxs-plugins/releases/download/opencode-v0.1.0/opencode-0.1.0.noxs-plugin",
+      "checksum": "5731862781e81581abe79fb6f234b9fc16474f36333e7a024bf2d62163ab0a30",
+      "updatedAt": "2026-10-12T04:50:57.870Z",
+      "releaseTag": "opencode-v0.1.0"
+    },
+    {
       "id": "payload-lab",
       "name": "Payload Lab",
       "version": "0.1.1",
